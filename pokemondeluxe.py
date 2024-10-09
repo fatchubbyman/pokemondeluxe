@@ -6,10 +6,9 @@
 #we are learning to use objects classes web scraping and using a variety of functions to make this game
 # get a way to get out an input prompt everytime and ask what to do, we will have the most amount 0f functions ever
 # a battle mode, a more normal prompt mode asking you what to do, wild pokemon fight mode, buying mode, starting mode to select pokemon
+
+
 import pandas as pd
-
-
-
 
 df = pd.read_csv('Pokemon.csv')
 class Pokemon:
@@ -49,6 +48,16 @@ class Pokemon:
     def Iron(self):
         self.defense += 10
         print("Your %s has a new base defense of %d" % (self.name,self.defense))
+    
+def time():
+    for i in range (3):
+        print('.')
+        time.sleep(0.5)
+    
+        
+        
+
+
         
 
 
