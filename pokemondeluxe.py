@@ -13,9 +13,8 @@ import pandas as pd
 
 df = pd.read_csv('Pokemon.csv')
 class Pokemon:
-    def __init__(self,attitude: str,sp_attack: int,sp_defense: int,hp: int,speed : int,name : str,attack : int ,defense : int,exp:int,type1 :str,type2:str,total: int):
+    def __init__(self,sp_attack: int,sp_defense: int,hp: int,speed : int,name : str,attack : int ,defense : int,exp:int,type1 :str,type2:str,total: int):
         self.name = name
-        self.attitude = attitude
         self.sp_attack = sp_attack
         self.sp_defense = sp_defense
         self.hp = hp
@@ -51,19 +50,7 @@ class Pokemon:
         self.defense += 10
         print("Your %s has a new base defense of %d" % (self.name,self.defense))
         
-for i in range(0,152):
-    name = df.at[i,'Name']
-    type1 = df.at[i,'Type1']
-    type2 = df.at[i,'Type2']
-    Total = df.at[i,'Total']
-    hp = df.at[i,'HP']
-    attack = df.at[i,'Attack']
-    defense = df.at[i,'Defense']
-    sp_attack = df.at[i,'Sp. Atk']
-    sp_defense = df.at[i,'Sp. Def']
-    speed = df.at[i,'Speed']
-    exp = 0
-    df.at[i,'Name'] = Pokemon(name=name,type1=type1,type2=type2,total=Total,hp=hp,attack=attack,defense=defense,sp_attack=sp_attack,sp_defense=sp_defense,speed=speed,exp=0)
+
 
 
         
