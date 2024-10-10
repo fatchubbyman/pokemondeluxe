@@ -49,10 +49,9 @@ class Pokemon:
         self.defense += 10
         print("Your %s has a new base defense of %d" % (self.name,self.defense))
     
-def time():
-    for i in range (3):
-        print('.')
-        time.sleep(0.5)
+class MyPokemon(Pokemon):
+    def __init__(self, sp_attack: int, sp_defense: int, hp: int, speed: int, name: str, attack: int, defense: int, exp: int, type1: str, type2: str, total: int):
+        super().__init__(sp_attack, sp_defense, hp, speed, name, attack, defense, exp, type1, type2, total)
     
         
         
