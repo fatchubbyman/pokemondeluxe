@@ -21,7 +21,9 @@ class Pokemon:
         self.speed = speed
         self.name = name
 
-    #need a repr like function to check if the pokemon needs to evolve or not according to level
+    def __repr__(self):
+        if self.level > 
+
 
 def evolution_log_error(poki,pokemon_logged = pokemon_logged):
     span_tag = poki.find('span', class_ = 'infocard-lg-data text-muted')
@@ -33,8 +35,27 @@ def evolution_log_error(poki,pokemon_logged = pokemon_logged):
 def weakness_logger(type1,type2 = None):
     pass
 
-def evolution_line_logger(rsoup):
-    rsoup.find()
+def evolution_line_logger(poki,name):
+    evolutions = poki.find('div', class_ = 'infocard-list-evo') 
+    names = evolutions.find_all('a', class_ = 'ent-name')
+    for naam in names:
+        if naam.text.strip() == name:
+            continue
+        link = 'https://pokemondb.net/pokedex/' + naam.text.strip()
+        rqsts = requests.get(link)
+        soup = BeautifulSoup(rqsts.content,'lxml')
+        name = soup.find('h1')
+        stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
+        numbers = stats_table.find_all('td', class_ = 'cell-num')
+        hp = int(numbers[0].text)
+        attack = int(numbers[3].text)
+        defense = int(numbers[6].text)
+        spatk = int(numbers[9].text)
+        spdef = int(numbers[12].text)
+        speed = int(numbers[15].text)
+        [type1,type2] = type_logger(rsoup)
+
+
     pass
 
 def evolving_checker():
@@ -84,7 +105,8 @@ for poki in pokemon_stats_filler:
     spdef = int(numbers[12].text)
     speed = int(numbers[15].text)
     [type1,type2] = type_logger(rsoup)
-    evolution_line_logger(rsoup)
+    evolution_line_logger(poki = rsoup,name=name)
+
 
 
     
