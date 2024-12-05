@@ -38,17 +38,28 @@ def evolution_log_error(poki,pokemon_logged = pokemon_logged):
 def exp_cap_changer(level,typee):
     if typee == 'Erratic':
         if level < 50:
-            exp_cap = ((level+1)**3)(100 - (level+1))/50 - (level**3)(100 - level)/50
+            exp_cap = ((level+1)**3)*(100 - (level+1))/50 - ((level**3)*(100 - level)/50)
+        elif 68 > level >= 50:
+            exp_cap = ((level+1)**3)*(150 - (level+1))/100 - ((level**3)*(150 - level)/100)
+        elif 68 <= level < 98:
+            exp_cap = ((level+1)**3)*((1911 - 10*(level+1))/3)/500 - ((level**3)*((1911 - 10*level)/3)/500)
+        elif 100 > level >= 98:
+            exp_cap = ((level+1)**3)*(160 - (level+1))/100 - ((level**3)*(160 - level)/100)
     elif typee == 'Fast':
-        pass
+        exp_cap = 4*((level+1)**3)/5 - 4*(level**3)/5
     elif typee == 'Medium Fast':
-        pass
+        exp_cap = (level+1)**3 - level**3
     elif typee == 'Medium Slow':
-        pass
+        exp_cap = 6/5*(level+1)**3 - 15*(level+1)**2 + 100(level+1) - 140 - (6/5*(level)**3 - 15*(level)**2 + 100(level) - 140)
     elif level == 'Slow':
-        pass
+        exp_cap = 5*(((level+1)**3)/4) - (5*((level**3)/4))
     elif level == 'Fluctuating':
-        pass
+        if level < 15:
+            exp_cap = (((level+1)**3)*((level+1)+1/3) + 24)/50 - ((((level)**3)*((level)+1/3) + 24)/50)
+        elif 36 > level >= 15:
+            exp_cap = ((level+1)**3)*((level+1)+14)/50 - ((level**3)*(level+14)/50)
+        elif 36 <= level < 100:
+            exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
 
 def weakness_logger(type1,type2 = None):
@@ -73,10 +84,7 @@ def evolution_line_logger(poki,name):
         spdef = int(numbers[12].text)
         speed = int(numbers[15].text)
         [type1,type2] = type_logger(rsoup)
-        
-
-
-    pass
+        pass
 
 def evolving_checker():
     pass
@@ -127,7 +135,6 @@ for poki in pokemon_stats_filler:
     [type1,type2] = type_logger(rsoup)
     evolution_line_logger(poki = rsoup,name=name)
     vitals_table = rsoup.find('table', class_ = 'vitals-table')
-    for 
 
 
 
