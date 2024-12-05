@@ -140,7 +140,14 @@ for poki in pokemon_stats_filler:
     speed = int(numbers[15].text)
     [type1,type2] = type_logger(rsoup)
     evolution_line_logger(poki = rsoup,name=name)
-    vitals_table = rsoup.find('table', class_ = 'vitals-table')
+    trs = rsoup.find_all('tr')
+    for tr in trs:
+        if tr:
+            th = tr.find('th')
+            if th.text.strip() == 'Growth Rate':
+                growth_rate = tr.find('td').text.strip()
+                break
+    exp_type = growth_rate
 
 
 
