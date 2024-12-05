@@ -1,10 +1,13 @@
 from bs4 import BeautifulSoup
 import requests
 import random as rd
+import matplotlib    # for showing hp of every pokemon after every battle????
 
 pokemon_logged = []
 class Pokemon:
-    def __init__(self, hp: int, moves: dict,weakness:list,type1:str, spatk: int ,spdef: int,speed: int,exp_cap:int,exp_type:str,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,type2 = None, level = 5,moveset={},exp = 0):
+    def __init__(self, hp: int, moves: dict,weakness:list,type1:str, spatk: int ,spdef: int,speed: int,
+                 exp_cap:int,exp_type:str,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,
+                 type2 = None, level = 5,moveset={},exp = 0):
 
         self.hp = hp
         self.type1 = type1
@@ -23,9 +26,12 @@ class Pokemon:
         self.exp = exp 
         self.exp_type = exp_type
         self.exp_cap = exp_cap_changer(level = self.level,typee = self.exp_type)
+    
 
-    def __repr__(self):      #this function just actively checks if the exp is enough to level up and also checks the level of evolution and evovles to the next pokemon
-        if self.level > 
+    def level_up(self):
+        if self.exp >= self.exp_cap:  # Check if experience is enough to level up
+            self.level += 1
+            self.exp = 0  # Reset experience after leveling up
 
 
 def evolution_log_error(poki,pokemon_logged = pokemon_logged):
@@ -50,10 +56,10 @@ def exp_cap_changer(level,typee):
     elif typee == 'Medium Fast':
         exp_cap = (level+1)**3 - level**3
     elif typee == 'Medium Slow':
-        exp_cap = 6/5*(level+1)**3 - 15*(level+1)**2 + 100(level+1) - 140 - (6/5*(level)**3 - 15*(level)**2 + 100(level) - 140)
-    elif level == 'Slow':
+        exp_cap = 6/5*(level+1)**3 - 15*(level+1)**2 + 100*(level+1) - 140 - (6/5*(level)**3 - 15*(level)**2 + 100*(level) - 140)
+    elif typee == 'Slow':
         exp_cap = 5*(((level+1)**3)/4) - (5*((level**3)/4))
-    elif level == 'Fluctuating':
+    elif typee == 'Fluctuating':
         if level < 15:
             exp_cap = (((level+1)**3)*((level+1)+1/3) + 24)/50 - ((((level)**3)*((level)+1/3) + 24)/50)
         elif 36 > level >= 15:
@@ -135,6 +141,7 @@ for poki in pokemon_stats_filler:
     [type1,type2] = type_logger(rsoup)
     evolution_line_logger(poki = rsoup,name=name)
     vitals_table = rsoup.find('table', class_ = 'vitals-table')
+
 
 
 
