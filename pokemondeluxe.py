@@ -4,7 +4,7 @@ import random as rd
 
 pokemon_logged = []
 class Pokemon:
-    def __init__(self, hp: int, moves: dict,weakness:list,type1:str, spatk: int ,spdef: int,speed: int,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,type2 = None, level = 5,moveset={}):
+    def __init__(self, hp: int, moves: dict,weakness:list,type1:str, spatk: int ,spdef: int,speed: int,exp_cap:int,exp_type:str,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,type2 = None, level = 5,moveset={},exp = 0):
 
         self.hp = hp
         self.type1 = type1
@@ -20,8 +20,11 @@ class Pokemon:
         self.spdef = spdef
         self.speed = speed
         self.name = name
+        self.exp = exp 
+        self.exp_type = exp_type
+        self.exp_cap = exp_cap_changer(level = self.level,typee = self.exp_type)
 
-    def __repr__(self):
+    def __repr__(self):      #this function just actively checks if the exp is enough to level up and also checks the level of evolution and evovles to the next pokemon
         if self.level > 
 
 
@@ -31,6 +34,22 @@ def evolution_log_error(poki,pokemon_logged = pokemon_logged):
     if name in pokemon_logged:
         return True
     return False
+
+def exp_cap_changer(level,typee):
+    if typee == 'Erratic':
+        if level < 50:
+            exp_cap = ((level+1)**3)(100 - (level+1))/50 - (level**3)(100 - level)/50
+    elif typee == 'Fast':
+        pass
+    elif typee == 'Medium Fast':
+        pass
+    elif typee == 'Medium Slow':
+        pass
+    elif level == 'Slow':
+        pass
+    elif level == 'Fluctuating':
+        pass
+    return exp_cap
 
 def weakness_logger(type1,type2 = None):
     pass
@@ -54,6 +73,7 @@ def evolution_line_logger(poki,name):
         spdef = int(numbers[12].text)
         speed = int(numbers[15].text)
         [type1,type2] = type_logger(rsoup)
+        
 
 
     pass
@@ -106,6 +126,8 @@ for poki in pokemon_stats_filler:
     speed = int(numbers[15].text)
     [type1,type2] = type_logger(rsoup)
     evolution_line_logger(poki = rsoup,name=name)
+    vitals_table = rsoup.find('table', class_ = 'vitals-table')
+    for 
 
 
 
