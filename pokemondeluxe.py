@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import random as rd
-import matplotlib    # for showing hp of every pokemon after every battle????
+import matplotlib          # for showing hp of every pokemon after every battle????
+import numpy as np
 
 pokemon_logged = []
 class Pokemon:
@@ -68,8 +69,8 @@ def exp_cap_changer(level,typee):
             exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
 
-def weakness_logger(type1,type2 = None):
-    if type1 == 'Fire':
+def weakness_logger(type1,type2 = None):       #(WON'T BE USING THIS!!!!!!)
+    if type1 == 'Fire' :
         weaknesses = ['Water','Rock','Ground']
     elif type1 == 'Water':
         weaknesses = ['Electric','Grass']
@@ -101,7 +102,14 @@ def weakness_logger(type1,type2 = None):
         weakneses = []
     elif type1 == 'Normal':
         weakneses = []
+    elif type1 == 'Fighting':
+        weakneses = []
+    elif type1 == 'Rock':
+        weakneses = []
     return weaknesses
+
+def weakness_multiplier():
+    pass
 
 def evolution_line_logger(poki,name):
     evolutions = poki.find('div', class_ = 'infocard-list-evo') 
@@ -133,7 +141,7 @@ def win():
 def loss():
     pass
 
-def battle():
+def battle(your_pokemon,opponent_pokemon):       #get trainer data from https://www.serebii.net/pokearth/
     pass
 
 def type_logger(soup):
@@ -149,7 +157,7 @@ def type_logger(soup):
 
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
-
+game_choice = game_choice.title()
 url = 'https://pokemondb.net/pokedex/game/' + games[game_choice.lower()]
 rqsts = requests.get(url)
 soup = BeautifulSoup(rqsts.content,'lxml')
@@ -186,4 +194,31 @@ for poki in pokemon_stats_filler:
     weaknesses = weakness_logger(type1=type1,type2=type2)
 
 
-    
+
+
+
+location_site = 'https://www.serebii.net/pokearth/'
+reachingout = requests.get(location_site)
+region_soup = BeautifulSoup(reachingout.content,'lxml')
+select_element = region_soup.find_all('select', {'name': 'SelectURL'})
+for element in select_element:
+    onchange_value = element.get('onchange')
+    if game_choice.lower() in onchange_value:
+        break
+select_element = region_soup.find('select', onchange = onchange_value)
+routes = select_element.find_all('option')
+for route in routes[1:]:
+    route()
+
+
+
+def route(location = route):
+    print(location.text + ':')
+    location_site = location.get('value')
+    location_site = 'https://www.serebii.net' + location_site
+    if 'kanto' in location_site:
+        location_site.replace('/kanto','/kanto/3rd')
+    rqsts = requests.get(location_site)
+    soup = BeautifulSoup(rqsts.content,'lxml')
+    # you can either get a trainer or find wild pokemon(use while loops)
+
