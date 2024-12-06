@@ -5,14 +5,14 @@ import matplotlib    # for showing hp of every pokemon after every battle????
 
 pokemon_logged = []
 class Pokemon:
-    def __init__(self, hp: int, moves: dict,weakness:list,type1:str, spatk: int ,spdef: int,speed: int,
+    def __init__(self, hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
                  exp_cap:int,exp_type:str,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,
                  type2 = None, level = 5,moveset={},exp = 0):
 
         self.hp = hp
         self.type1 = type1
         self.type2 = type2
-        self.weakness = weakness
+        self.weaknesses = weaknesses
         self.moveset = moveset
         self.level = level
         self.evolution = evolution
@@ -31,7 +31,7 @@ class Pokemon:
     def level_up(self):
         if self.exp >= self.exp_cap:  # Check if experience is enough to level up
             self.level += 1
-            self.exp = 0  # Reset experience after leveling up
+            self.exp = 0              # Reset experience after leveling up
 
 
 def evolution_log_error(poki,pokemon_logged = pokemon_logged):
@@ -69,7 +69,39 @@ def exp_cap_changer(level,typee):
     return exp_cap
 
 def weakness_logger(type1,type2 = None):
-    pass
+    if type1 == 'Fire':
+        weaknesses = ['Water','Rock','Ground']
+    elif type1 == 'Water':
+        weaknesses = ['Electric','Grass']
+    elif type1 == 'Electric':
+        weaknesses = ['Ground','']
+    elif type1 == 'Grass':
+        weaknesses = ['Fire']
+    elif type1 == 'Ground':
+        weaknesses = ['Water']
+    elif type1 == 'Fairy':
+        weaknesses = ['Steel']
+    elif type1 == 'Steel':
+        weaknesses = ['Fire']
+    elif type1 == 'Ice':
+        weaknesses = ['Fire']
+    elif type1 == 'Dark':
+        weaknesses = ['Fighting']
+    elif type1 == 'Bug':
+        weaknesses = []
+    elif type1 == 'Poison':
+        weaknesses = []
+    elif type1 == 'Psychic':
+        weakneses = ['Dark']
+    elif type1 == 'Dragon':
+        weakneses = []
+    elif type1 == 'Ghost':
+        weakneses = []
+    elif type1 == 'Flying':
+        weakneses = []
+    elif type1 == 'Normal':
+        weakneses = []
+    return weaknesses
 
 def evolution_line_logger(poki,name):
     evolutions = poki.find('div', class_ = 'infocard-list-evo') 
@@ -99,6 +131,9 @@ def win():
     pass
 
 def loss():
+    pass
+
+def battle():
     pass
 
 def type_logger(soup):
@@ -148,27 +183,7 @@ for poki in pokemon_stats_filler:
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-
-
+    weaknesses = weakness_logger(type1=type1,type2=type2)
 
 
     
-
-
-
-
-
-
-
-
-
-        
-
-
-        
-
-
-
-        
-        
-        
