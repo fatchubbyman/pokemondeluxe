@@ -79,46 +79,17 @@ def exp_cap_changer(level,typee):
             exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
 
-def effect_multiplier():       #(WON'T BE USING THIS!!!!!!)
-    if type1 == 'Fire' :
-        weaknesses = ['Water','Rock','Ground']
-    elif type1 == 'Water':
-        weaknesses = ['Electric','Grass']
-    elif type1 == 'Electric':
-        weaknesses = ['Ground','']
-    elif type1 == 'Grass':
-        weaknesses = ['Fire']
-    elif type1 == 'Ground':
-        weaknesses = ['Water']
-    elif type1 == 'Fairy':
-        weaknesses = ['Steel']
-    elif type1 == 'Steel':
-        weaknesses = ['Fire']
-    elif type1 == 'Ice':
-        weaknesses = ['Fire']
-    elif type1 == 'Dark':
-        weaknesses = ['Fighting']
-    elif type1 == 'Bug':
-        weaknesses = []
-    elif type1 == 'Poison':
-        weaknesses = []
-    elif type1 == 'Psychic':
-        weakneses = ['Dark']
-    elif type1 == 'Dragon':
-        weakneses = []
-    elif type1 == 'Ghost':
-        weakneses = []
-    elif type1 == 'Flying':
-        weakneses = []
-    elif type1 == 'Normal':
-        weakneses = []
-    elif type1 == 'Fighting':
-        weakneses = []
-    elif type1 == 'Rock':
-        weakneses = []
-    return weaknesses
+def effect_multiplier(move_type,type1,type2):      
+    if move_type == 'Normal' and (type1 == 'Rock' or type2 == 'Rock') or (type2 == 'Steel' or type1 == 'Steel'):
+        effectiveness = 0.5
+    elif move_type == 'Normal' and (type1 == 'Ghost' or type2 == 'Ghost'):
+        effectiveness = 0
+    elif move_type == 'Fighting' and 
+    else:
+        effectiveness = 1
+    return effectiveness
 
-def default_moves_logger(soup,moveset={}):
+def default_moves_logger(soup,moveset):
     move_table = soup.find('table' , class_ = 'data-table')
     trs = move_table.find_all('tr')
     for tr in trs[:4]:
@@ -126,8 +97,10 @@ def default_moves_logger(soup,moveset={}):
         typee = tr.find('td' , class_ = 'cell-icon').text.strip()
         power = tr.find_all_next('td', class_ = 'cell-num')[0].text.strip()
         accuracy = tr.find_all_next('td', class_ = 'cell-num')[1].text.strip()
-        effectiveness = effect_multiplier()
-        moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power)
+        effectiveness = effect_multiplier()   #this parameter will contain the object of the pokemon the player uses
+        moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power,effectiveness=effectiveness)
+
+        
 
     
 
@@ -241,6 +214,8 @@ def route(location = route):
     location_site = 'https://www.serebii.net' + location_site
     if 'kanto' in location_site:
         location_site.replace('/kanto','/kanto/4th')
+    elif 'sinnoh' in location_site:
+        location_site.replace('/sinnoh','/sinnoh/4th')
     rqsts = requests.get(location_site)
     soup = BeautifulSoup(rqsts.content,'lxml')
     # you can either get a trainer or find wild pokemon(use while loops)
