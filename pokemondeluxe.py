@@ -6,11 +6,11 @@ import numpy as np
 
 pokemon_logged = []
 class Pokemon:
-    def __init__(self, hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
-                 exp_cap:int,exp_type:str,evolution:dict,name: str,attack: int,defense: int,evolution_level:int,
+    def __init__(self, base_hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
+                 exp_cap:int,exp_type:str,evolution:dict,name: str,iv:int,attack: int,defense: int,evolution_level:int,
                  type2 = None, level = 5,moveset={},exp = 0):
 
-        self.hp = hp
+        self.base_hp = base_hp
         self.type1 = type1
         self.type2 = type2
         self.weaknesses = weaknesses
@@ -27,12 +27,22 @@ class Pokemon:
         self.exp = exp 
         self.exp_type = exp_type
         self.exp_cap = exp_cap_changer(level = self.level,typee = self.exp_type)
+        self.iv = iv
     
 
     def level_up(self):
         if self.exp >= self.exp_cap:  # Check if experience is enough to level up
             self.level += 1
             self.exp = 0              # Reset experience after leveling up
+
+class Moves:
+    def __init__(self,typex,damage,accuracy,power,effectiveness = 1):
+        self.typex = typex
+        self.damage = damage
+        self.effectiveness = effectiveness
+        self.accuracy = accuracy
+        self.power = power
+    
 
 
 def evolution_log_error(poki,pokemon_logged = pokemon_logged):
@@ -69,7 +79,7 @@ def exp_cap_changer(level,typee):
             exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
 
-def weakness_logger(type1,type2 = None):       #(WON'T BE USING THIS!!!!!!)
+def effect_multiplier():       #(WON'T BE USING THIS!!!!!!)
     if type1 == 'Fire' :
         weaknesses = ['Water','Rock','Ground']
     elif type1 == 'Water':
@@ -108,8 +118,18 @@ def weakness_logger(type1,type2 = None):       #(WON'T BE USING THIS!!!!!!)
         weakneses = []
     return weaknesses
 
-def weakness_multiplier():
-    pass
+def default_moves_logger(soup,moveset={}):
+    move_table = soup.find('table' , class_ = 'data-table')
+    trs = move_table.find_all('tr')
+    for tr in trs[:4]:
+        name = tr.find('td' , class_ = 'cell-name').text.strip()
+        typee = tr.find('td' , class_ = 'cell-icon').text.strip()
+        power = tr.find_all_next('td', class_ = 'cell-num')[0].text.strip()
+        accuracy = tr.find_all_next('td', class_ = 'cell-num')[1].text.strip()
+        effectiveness = effect_multiplier()
+        moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power)
+
+    
 
 def evolution_line_logger(poki,name):
     evolutions = poki.find('div', class_ = 'infocard-list-evo') 
@@ -141,8 +161,8 @@ def win():
 def loss():
     pass
 
-def battle(your_pokemon,opponent_pokemon):       #get trainer data from https://www.serebii.net/pokearth/
-    pass
+def battle(your_pokemon:dict,opponent_pokemon):       #get trainer data from https://www.serebii.net/pokearth/
+    print(' '.join(your_pokemon.keys()) + ' /n Which Pokemon would you like to pick? ')
 
 def type_logger(soup):
     pokedex_data = soup.find('div' , class_ = 'grid-col span-md-6 span-lg-4')
@@ -175,7 +195,7 @@ for poki in pokemon_stats_filler:
     rsoup = BeautifulSoup(rqsts.content,'lxml')
     stats_table = rsoup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
     numbers = stats_table.find_all('td', class_ = 'cell-num')
-    hp = int(numbers[0].text)
+    base_hp = int(numbers[0].text)
     attack = int(numbers[3].text)
     defense = int(numbers[6].text)
     spatk = int(numbers[9].text)
@@ -191,7 +211,10 @@ for poki in pokemon_stats_filler:
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-    weaknesses = weakness_logger(type1=type1,type2=type2)
+    weaknesses = weakness_logger(type1=type1,type2=type2)     #not USING THIS!!!!
+    iv = rd.randrange(20,32)
+    default_moves_logger(moveset = {},soup=rsoup)
+    
 
 
 
@@ -217,8 +240,10 @@ def route(location = route):
     location_site = location.get('value')
     location_site = 'https://www.serebii.net' + location_site
     if 'kanto' in location_site:
-        location_site.replace('/kanto','/kanto/3rd')
+        location_site.replace('/kanto','/kanto/4th')
     rqsts = requests.get(location_site)
     soup = BeautifulSoup(rqsts.content,'lxml')
     # you can either get a trainer or find wild pokemon(use while loops)
+    #wild pokemon
+    rd.randrange()
 
