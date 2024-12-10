@@ -79,14 +79,45 @@ def exp_cap_changer(level,typee):
             exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
 
-def effect_multiplier(move_type,type1,type2):      
-    if move_type == 'Normal' and (type1 == 'Rock' or type2 == 'Rock') or (type2 == 'Steel' or type1 == 'Steel'):
-        effectiveness = 0.5
-    elif move_type == 'Normal' and (type1 == 'Ghost' or type2 == 'Ghost'):
-        effectiveness = 0
-    elif move_type == 'Fighting' and 
-    else:
-        effectiveness = 1
+def ellect_multiplier(move_type, type1, type2=None):
+    type_chart = {
+        'Normal': {'Rock': 0.5, 'Steel': 0.5, 'Ghost': 0},
+        'Fighting': {'Normal': 2, 'Rock': 2, 'Steel': 2, 'Ice': 2, 'Dark': 2, 'Ghost': 0,
+                     'Flying': 0.5, 'Poison': 0.5, 'Bug': 0.5, 'Psychic': 0.5, 'Fairy': 0.5},
+        'Flying': {'Fighting': 2, 'Bug': 2, 'Grass': 2, 'Rock': 0.5, 'Steel': 0.5, 'Electric': 0.5},
+        'Poison': {'Grass': 2, 'Fairy': 2, 'Poison': 0.5, 'Ground': 0.5, 'Rock': 0.5, 'Ghost': 0.5, 'Steel': 0},
+        'Ground': {'Poison': 2, 'Rock': 2, 'Steel': 2, 'Fire': 2, 'Electric': 2, 'Grass': 0.5, 'Bug': 0.5,
+                   'Flying': 0},
+        'Rock': {'Flying': 2, 'Bug': 2, 'Fire': 2, 'Ice': 2, 'Fighting': 0.5, 'Ground': 0.5, 'Steel': 0.5},
+        'Bug': {'Grass': 2, 'Psychic': 2, 'Dark': 2, 'Fighting': 0.5, 'Flying': 0.5, 'Poison': 0.5,
+                'Ghost': 0.5, 'Steel': 0.5, 'Fire': 0.5, 'Fairy': 0.5},
+        'Ghost': {'Ghost': 2, 'Psychic': 2, 'Dark': 0.5, 'Normal': 0},
+        'Steel': {'Rock': 2, 'Ice': 2, 'Fairy': 2, 'Steel': 0.5, 'Fire': 0.5, 'Water': 0.5, 'Electric': 0.5},
+        'Fire': {'Bug': 2, 'Steel': 2, 'Grass': 2, 'Ice': 2, 'Rock': 0.5, 'Fire': 0.5, 'Water': 0.5,
+                 'Dragon': 0.5},
+        'Water': {'Ground': 2, 'Rock': 2, 'Fire': 2, 'Water': 0.5, 'Grass': 0.5, 'Dragon': 0.5},
+        'Grass': {'Ground': 2, 'Rock': 2, 'Water': 2, 'Flying': 0.5, 'Poison': 0.5, 'Bug': 0.5,
+                  'Steel': 0.5, 'Fire': 0.5, 'Grass': 0.5, 'Dragon': 0.5},
+        'Electric': {'Flying': 2, 'Water': 2, 'Ground': 0, 'Grass': 0.5, 'Electric': 0.5, 'Dragon': 0.5},
+        'Psychic': {'Fighting': 2, 'Poison': 2, 'Steel': 0.5, 'Psychic': 0.5, 'Dark': 0},
+        'Ice': {'Flying': 2, 'Ground': 2, 'Grass': 2, 'Dragon': 2, 'Steel': 0.5, 'Fire': 0.5, 'Water': 0.5,
+                'Ice': 0.5},
+        'Dragon': {'Dragon': 2, 'Steel': 0.5, 'Fairy': 0},
+        'Dark': {'Ghost': 2, 'Psychic': 2, 'Fighting': 0.5, 'Dark': 0.5, 'Fairy': 0.5},
+        'Fairy': {'Fighting': 2, 'Dragon': 2, 'Dark': 2, 'Poison': 0.5, 'Steel': 0.5, 'Fire': 0.5},
+    }
+
+    # Default effectiveness
+    effectiveness = 1
+
+    # Check defender's primary type
+    if move_type in type_chart and type1 in type_chart[move_type]:
+        effectiveness *= type_chart[move_type][type1]
+
+    # Check defender's secondary type (if applicable)
+    if type2 and move_type in type_chart and type2 in type_chart[move_type]:
+        effectiveness *= type_chart[move_type][type2]
+
     return effectiveness
 
 def default_moves_logger(soup,moveset):
