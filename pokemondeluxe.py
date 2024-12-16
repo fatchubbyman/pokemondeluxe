@@ -15,28 +15,32 @@ import numpy as np
 your_pokemon = {}
 
 class MyPokemon:
-    def __init__(self, base_hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
-                 exp_cap:int,exp_type:str,evolution:dict,name: str,iv:int,attack: int,defense: int,evolution_level:int,
-                 type2 = None, level = 5,moveset={},exp = 0):
+    def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
+                 exp_cap:int,exp_type:str,evolution:dict,name: str,iv,attack: int,defense: int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
+                 ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
         self.type1 = type1
         self.type2 = type2
-        self.weaknesses = weaknesses
         self.moveset = moveset
         self.level = level
         self.evolution = evolution
         self.evolution_level = evolution_level
-        self.attack = attack
-        self.defense = defense
-        self.spatk = spatk
-        self.spdef = spdef
-        self.speed = speed
+        self.base_atk = base_atk
+        self.attack = attack(base = base_atk)
+        self.base_defense = base_defense
+        self.defense = defense(base = defense)
+        self.base_spatk = base_spatk
+        self.spatk = spatk(base = base_spatk)
+        self.base_spdef = base_spdef
+        self.spdef = spdef(base = base_spdef)
+        self.base_speed = base_speed
+        self.speed = speed(base = base_speed)
         self.name = name
         self.exp = exp 
         self.exp_type = exp_type
         self.exp_cap = exp_cap_changer(level = self.level,typee = self.exp_type)
-        self.iv = iv
+        self.iv = rd.randrange(20,32)
     
 
     def level_up(self):
@@ -48,23 +52,22 @@ class MyPokemon:
         pass
 
 class Moves:
-    def __init__(self,typex,damage,accuracy,power,effectiveness = 1):
+    def __init__(self,typex,damage,accuracy,power):
         self.typex = typex
         self.damage = damage
-        self.effectiveness = effectiveness
         self.accuracy = accuracy
         self.power = power
 
 class Pokemon(MyPokemon):
-
-    def __init__(self, base_hp, weaknesses, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack
-                 , defense, evolution_level, type2=None, level=5, moveset={}, exp=0):
-        super().__init__(base_hp, weaknesses, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, 
-                         defense, evolution_level, type2, level, moveset, exp)
+    def __init__(self, base_hp, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2=None, level=5, moveset={}, exp=0):
+        super().__init__(base_hp, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2, level, moveset, exp)
         del self.evolution 
         del self.iv
         del self.evolution_level
         del self.exp
+        del self.exp_cap
+        del self.exp_type
+        del self.weaknesses
     
 
 def exp_cap_changer(level,typee):
@@ -167,21 +170,14 @@ def pokemon_logger(level, pokemon):
     stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
     numbers = stats_table.find_all('td', class_ = 'cell-num')
     base_hp = int(numbers[0].text)
-    attack = int(numbers[3].text)
-    defense = int(numbers[6].text)
-    spatk = int(numbers[9].text)
-    spdef = int(numbers[12].text)
-    speed = int(numbers[15].text)
+    base_attack = int(numbers[3].text)
+    base_defense = int(numbers[6].text)
+    base_spatk = int(numbers[9].text)
+    base_spdef = int(numbers[12].text)
+    base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
-    iv = rd.randrange(20,32)
-    trs = rsoup.find_all('tr')
-    for tr in trs:
-        if tr:
-            th = tr.find('th')
-            if th.text.strip() == 'Growth Rate':
-                growth_rate = tr.find('td').text.strip()
-                break
-    exp_type = growth_rate
+    opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=,base_speed=base_speed,base_attack=base_attack,base_defense=base_defense,base_hp = base_hp)
+    return opp_pokemon 
 
 def pokemon_caught(level, pokemon):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
@@ -197,7 +193,7 @@ def pokemon_caught(level, pokemon):
     speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
     iv = rd.randrange(20,32)
-    trs = rsoup.find_all('tr')
+    trs = soup.find_all('tr')
     for tr in trs:
         if tr:
             th = tr.find('th')
@@ -205,6 +201,7 @@ def pokemon_caught(level, pokemon):
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
+    MyPokemon()
 
 
 
@@ -229,39 +226,6 @@ def type_logger(soup):
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
 game_choice = game_choice.title()
-url = 'https://pokemondb.net/pokedex/game/' + games[game_choice.lower()]
-rqsts = requests.get(url)         
-soup = BeautifulSoup(rqsts.content,'lxml')
-pokemon_stats_filler = soup.find('div' , class_ = 'infocard-list infocard-list-pkmn-lg')     
-pokemon_stats_filler = pokemon_stats_filler.find_all('div', class_ = 'infocard ')
-for poki in pokemon_stats_filler:
-    if evolution_log_error(poki= poki) is True:
-        continue
-    span_tag = poki.find('span', class_ = 'infocard-lg-data text-muted')
-    name = span_tag.find('a', class_ = 'ent-name').text.strip()
-    href = name.get('href')
-    name = name.text.strip()
-    link = 'https://pokemondb.net/' + href                #new function called pokemon_logger will be used to define stats and pokemon for the battle() function
-    rqsts = requests.get(link)
-    rsoup = BeautifulSoup(rqsts.content,'lxml')
-    stats_table = rsoup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
-    numbers = stats_table.find_all('td', class_ = 'cell-num')
-    base_hp = int(numbers[0].text)
-    attack = int(numbers[3].text)
-    defense = int(numbers[6].text)
-    spatk = int(numbers[9].text)
-    spdef = int(numbers[12].text)
-    speed = int(numbers[15].text)
-    [type1,type2] = type_logger(rsoup)
-    trs = rsoup.find_all('tr')
-    for tr in trs:
-        if tr:
-            th = tr.find('th')
-            if th.text.strip() == 'Growth Rate':
-                growth_rate = tr.find('td').text.strip()
-                break
-    exp_type = growth_rate
-    iv = rd.randrange(20,32)
     
 
 
@@ -323,6 +287,7 @@ def route(location = route):
             elif new_prompt != 'yes':
                 continue
             wild_battle(opponent_pokemon=selected_pokemon,level= level)
+
         #trainer battle 
     
         
