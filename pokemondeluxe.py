@@ -13,7 +13,8 @@ import random as rd
 import matplotlib                  # for showing hp of every pokemon after every battle
 import numpy as np
 your_pokemon = {}
-class Pokemon:
+
+class MyPokemon:
     def __init__(self, base_hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
                  exp_cap:int,exp_type:str,evolution:dict,name: str,iv:int,attack: int,defense: int,evolution_level:int,
                  type2 = None, level = 5,moveset={},exp = 0):
@@ -53,6 +54,17 @@ class Moves:
         self.effectiveness = effectiveness
         self.accuracy = accuracy
         self.power = power
+
+class Pokemon(MyPokemon):
+
+    def __init__(self, base_hp, weaknesses, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack
+                 , defense, evolution_level, type2=None, level=5, moveset={}, exp=0):
+        super().__init__(base_hp, weaknesses, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, 
+                         defense, evolution_level, type2, level, moveset, exp)
+        del self.evolution 
+        del self.iv
+        del self.evolution_level
+        del self.exp
     
 
 def exp_cap_changer(level,typee):
@@ -139,30 +151,6 @@ def hp_bar(current_hp, max_hp, bar_length=20):
     bar = "█" * filled_length + "-" * empty_length
     print(f"HP: [{bar}] {current_hp}/{max_hp}")
 
-        
-
-    
-
-def evolution_line_logger(poki,name):
-    evolutions = poki.find('div', class_ = 'infocard-list-evo') 
-    names = evolutions.find_all('a', class_ = 'ent-name')
-    for naam in names:
-        if naam.text.strip() == name:
-            continue
-        link = 'https://pokemondb.net/pokedex/' + naam.text.strip()
-        rqsts = requests.get(link)
-        soup = BeautifulSoup(rqsts.content,'lxml')
-        name = soup.find('h1')
-        stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
-        numbers = stats_table.find_all('td', class_ = 'cell-num')
-        hp = int(numbers[0].text)
-        attack = int(numbers[3].text)
-        defense = int(numbers[6].text)
-        spatk = int(numbers[9].text)
-        spdef = int(numbers[12].text)
-        speed = int(numbers[15].text)
-        [type1,type2] = type_logger(rsoup)
-        pass
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
     pass
@@ -194,6 +182,30 @@ def pokemon_logger(level, pokemon):
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
+
+def pokemon_caught(level, pokemon):
+    url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
+    rqsts = requests.get(url)
+    soup = BeautifulSoup(rqsts.content,'lxml')
+    stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
+    numbers = stats_table.find_all('td', class_ = 'cell-num')
+    base_hp = int(numbers[0].text)
+    attack = int(numbers[3].text)
+    defense = int(numbers[6].text)
+    spatk = int(numbers[9].text)
+    spdef = int(numbers[12].text)
+    speed = int(numbers[15].text)
+    [type1,type2] = type_logger(soup)
+    iv = rd.randrange(20,32)
+    trs = rsoup.find_all('tr')
+    for tr in trs:
+        if tr:
+            th = tr.find('th')
+            if th.text.strip() == 'Growth Rate':
+                growth_rate = tr.find('td').text.strip()
+                break
+    exp_type = growth_rate
+
 
 
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
@@ -241,7 +253,6 @@ for poki in pokemon_stats_filler:
     spdef = int(numbers[12].text)
     speed = int(numbers[15].text)
     [type1,type2] = type_logger(rsoup)
-    evolution_line_logger(poki = rsoup,name=name)
     trs = rsoup.find_all('tr')
     for tr in trs:
         if tr:
@@ -250,7 +261,6 @@ for poki in pokemon_stats_filler:
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-    #weaknesses = weakness_logger(type1=type1,type2=type2)     #not USING THIS!!!!
     iv = rd.randrange(20,32)
     
 
