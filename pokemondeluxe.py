@@ -12,8 +12,7 @@ import requests
 import random as rd
 import matplotlib                  # for showing hp of every pokemon after every battle
 import numpy as np
-
-pokemon_logged = []
+your_pokemon = {}
 class Pokemon:
     def __init__(self, base_hp: int,weaknesses:list,type1:str, spatk: int ,spdef: int,speed: int,
                  exp_cap:int,exp_type:str,evolution:dict,name: str,iv:int,attack: int,defense: int,evolution_level:int,
@@ -55,14 +54,6 @@ class Moves:
         self.accuracy = accuracy
         self.power = power
     
-
-
-def evolution_log_error(poki,pokemon_logged = pokemon_logged):
-    span_tag = poki.find('span', class_ = 'infocard-lg-data text-muted')
-    name = span_tag.find('a', class_ = 'ent-name').text.strip()
-    if name in pokemon_logged:
-        return True
-    return False
 
 def exp_cap_changer(level,typee):
     if typee == 'Erratic':
@@ -181,8 +172,35 @@ def clean_up_crew():      #impletments all the functions that need to be used af
 def evolving_checker():
     pass
 
+def pokemon_logger(level, pokemon):
+    url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
+    rqsts = requests.get(url)
+    soup = BeautifulSoup(rqsts.content,'lxml')
+    stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
+    numbers = stats_table.find_all('td', class_ = 'cell-num')
+    base_hp = int(numbers[0].text)
+    attack = int(numbers[3].text)
+    defense = int(numbers[6].text)
+    spatk = int(numbers[9].text)
+    spdef = int(numbers[12].text)
+    speed = int(numbers[15].text)
+    [type1,type2] = type_logger(soup)
+    iv = rd.randrange(20,32)
+    trs = rsoup.find_all('tr')
+    for tr in trs:
+        if tr:
+            th = tr.find('th')
+            if th.text.strip() == 'Growth Rate':
+                growth_rate = tr.find('td').text.strip()
+                break
+    exp_type = growth_rate
 
-def battle(your_pokemon:dict,opponent_pokemon):           #get trainer data from https://www.serebii.net/pokearth/
+
+def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
+    pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
+    # getting pokemon data
+    
+
     print(' '.join(your_pokemon.keys()) + ' /n Which Pokemon would you like to pick? ')
 
 def type_logger(soup):
@@ -289,9 +307,15 @@ def route(location = route):
         while True:
             selected_pokemon = rd.choices(choices, weights=weights, k=1)[0]
             level = rd.randrange(wild_pokemon[selected_pokemon][1][0],wild_pokemon[selected_pokemon][1][1]+1)
-            new_prompt = input(f"A wild level {level} {selected_pokemon} has appeared! Would you like to battle? ")
-            if new_prompt != 'yes':
+            new_prompt = input(f"A wild level {level} {selected_pokemon} has appeared! Would you like to battle? (yes/no/out)")
+            if new_prompt == 'out':
+                break
+            elif new_prompt != 'yes':
                 continue
+            wild_battle(opponent_pokemon=selected_pokemon,level= level)
+        #trainer battle 
+    
+        
 
 
 
