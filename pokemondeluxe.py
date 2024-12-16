@@ -4,7 +4,9 @@
 # routes need to be in a specific order for every game, otherwise the hard trainers will show up and there will be no continuity in the game
 # a while loop runs in every route for training your pokemon, and catching new ones, and when you are done training for pokemon, the next battle will be against a trainer 
 # when a trainer is met, a new dictionary needs to be initialised which will have the objects of the pokemon they have
-# a battle() function will run with your prompts
+# for gen 3 default moves need to be initialised because there is no data for that
+# a battle() function will run with your prompts and remote control the battle with the opponent pokemon
+# 
 from bs4 import BeautifulSoup
 import requests
 import random as rd
@@ -138,6 +140,14 @@ def default_moves_logger(soup,moveset):
         effectiveness = effect_multiplier(move_type=typee,type1=,type2=)        #this parameter will contain the object of the pokemon the player uses
         moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power,effectiveness=effectiveness)
 
+def hp_bar(current_hp, max_hp, bar_length=20):
+    current_hp = max(0, min(current_hp, max_hp))
+    hp_ratio = current_hp / max_hp
+    filled_length = int(bar_length * hp_ratio)
+    empty_length = bar_length - filled_length
+    bar = "█" * filled_length + "-" * empty_length
+    print(f"HP: [{bar}] {current_hp}/{max_hp}")
+
         
 
     
@@ -171,11 +181,6 @@ def clean_up_crew():      #impletments all the functions that need to be used af
 def evolving_checker():
     pass
 
-def win():
-    pass
-
-def loss():
-    pass
 
 def battle(your_pokemon:dict,opponent_pokemon):           #get trainer data from https://www.serebii.net/pokearth/
     print(' '.join(your_pokemon.keys()) + ' /n Which Pokemon would you like to pick? ')
@@ -229,7 +234,6 @@ for poki in pokemon_stats_filler:
     exp_type = growth_rate
     #weaknesses = weakness_logger(type1=type1,type2=type2)     #not USING THIS!!!!
     iv = rd.randrange(20,32)
-    default_moves_logger(moveset = {},soup=rsoup)
     
 
 
@@ -264,5 +268,33 @@ def route(location = route):
     #wild pokemon
     while True:       # while loop keeps on asking if you want to battle against a pokemon and when youre done battling wild pokemon(another while loop should be in place for catching the pokemon) then starts a battle with a trainer's pokemon
         prompt = input('"Do you want to search for a Pokémon? The area around you seems full of potential hiding spots. (Yes/No)"')
+        if prompt.lower() != 'yes':
+            break
+        anctab = location.find('table', class_ = 'anctab')
+        wild_pokemon_table = anctab.find_all_next('table',class_ =['extradextable', 'dextable'])
+        wild_pokemon_table = wild_pokemon_table[1:]
+        wild_pokemon = {}
+        for table in wild_pokemon_table:
+            names = table.find_all('td' , class_ = 'name')
+            finding_rates = table.find_all('td', class_ = 'rate')
+            levels = table.find_all('td', class_ = 'level')
+            for name,finding_rate,level in zip(names,finding_rates,levels):
+                level = level.strip("() ")
+                x,y = map(int, level.split(' - '))
+                wild_pokemon[name.text.strip()] = [int((finding_rate.text.strip().replace('%',''))),[x,y]]    #pidgey: 20%,5  #finding rate and level
+        total_rate = sum(data[0] for data in wild_pokemon.values())
+        normalized_rates = {name: (data[0] / total_rate) * 100 for name, data in wild_pokemon.items()}
+        choices = list(normalized_rates.keys())
+        weights = list(normalized_rates.values())
+        while True:
+            selected_pokemon = rd.choices(choices, weights=weights, k=1)[0]
+            level = rd.randrange(wild_pokemon[selected_pokemon][1][0],wild_pokemon[selected_pokemon][1][1]+1)
+            new_prompt = input(f"A wild level {level} {selected_pokemon} has appeared! Would you like to battle? ")
+            if new_prompt != 'yes':
+                continue
+
+
+
+
 
 
