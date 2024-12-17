@@ -163,6 +163,7 @@ def your_pokemon_display(your_pokemon = your_pokemon):
         if pokemon.status is True:
             print(f'{i}. {pokemon.name}')
             hp_bar(current_hp=pokemon.hp,max_hp=pokemon.max_hp)
+            print('')
             i += 1
             pokemon_alive.append(pokemon)
     return pokemon_alive
@@ -173,6 +174,16 @@ def pokemon_in_battle(pokemon,opp_pokemon):
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
     pass
 
+def wild_movesets_logger(soup):
+    moveset = {}
+    data_table = soup.find('table' , class_ = 'data-table')
+    trs = data_table.find_all('tr')
+    for tr in trs[:4]:
+        name = tr.find('td', class_ = 'cell_name').text.strip()
+        typex = tr.find('td' , class_ = 'cell-icon').text.strip()
+        power = (tr.find_all('td', class_ = 'cell-num')[0].text.strip())
+        accuracy = int(tr.find_all('td', class_ = 'cell-num')[0].text.strip())
+        moveset[name] = Moves(typex=typex,power=power,accuracy=accuracy,damage=#??)
 
 
 def evolving_checker():
@@ -191,7 +202,8 @@ def pokemon_logger(level, pokemon):
     base_spdef = int(numbers[12].text)
     base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
-    opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=,base_speed=base_speed,base_attack=base_attack,
+    moveset = movesets_logger(soup)
+    opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=moveset,base_speed=base_speed,base_attack=base_attack,
                           base_defense=base_defense,base_hp = base_hp,base_spatk=base_spatk,base_spdef=base_spdef)
     return opp_pokemon 
 
@@ -233,6 +245,7 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         print(f'Go out {pokemon.name}!')
         while True:
             pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+
 
         
 
@@ -315,7 +328,6 @@ def route(location = route):
             elif new_prompt != 'yes':
                 continue
             wild_battle(opponent_pokemon=selected_pokemon,level= level)
-
         #trainer battle 
     
         
