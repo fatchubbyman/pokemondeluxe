@@ -16,10 +16,12 @@ your_pokemon = {}
 
 class MyPokemon:
     def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
-                 exp_cap:int,exp_type:str,evolution:dict,name: str,iv,attack: int,defense: int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
-                 ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
+                 exp_type:str,evolution:dict,name: str,iv:int,hp :int,attack: int,defense: int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
+                 ,base_spdef:int,fainted:bool,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
+        self.max_hp = max_hp(base = base_hp)
+        self.hp = hp
         self.type1 = type1
         self.type2 = type2
         self.moveset = moveset
@@ -27,20 +29,21 @@ class MyPokemon:
         self.evolution = evolution
         self.evolution_level = evolution_level
         self.base_atk = base_atk
-        self.attack = attack(base = base_atk)
+        self.attack = attack_finder(base = base_atk)
         self.base_defense = base_defense
-        self.defense = defense(base = defense)
+        self.defense = defense_finder(base = defense)
         self.base_spatk = base_spatk
-        self.spatk = spatk(base = base_spatk)
+        self.spatk = spatk_finder(base = base_spatk)
         self.base_spdef = base_spdef
-        self.spdef = spdef(base = base_spdef)
+        self.spdef = spdef_finder(base = base_spdef)
         self.base_speed = base_speed
-        self.speed = speed(base = base_speed)
+        self.speed = speed_finder(base = base_speed)
         self.name = name
         self.exp = exp 
         self.exp_type = exp_type
-        self.exp_cap = exp_cap_changer(level = self.level,typee = self.exp_type)
+        self.exp_cap = exp_cap_changer(level = level,typee = exp_type)
         self.iv = rd.randrange(20,32)
+        self.fainted = fainted
     
 
     def level_up(self):
@@ -59,8 +62,7 @@ class Moves:
         self.power = power
 
 class Pokemon(MyPokemon):
-    def __init__(self, base_hp, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2=None, level=5, moveset={}, exp=0):
-        super().__init__(base_hp, type1, spatk, spdef, speed, exp_cap, exp_type, evolution, name, iv, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2, level, moveset, exp)
+    def __i      
         del self.evolution 
         del self.iv
         del self.evolution_level
@@ -154,6 +156,19 @@ def hp_bar(current_hp, max_hp, bar_length=20):
     bar = "█" * filled_length + "-" * empty_length
     print(f"HP: [{bar}] {current_hp}/{max_hp}")
 
+def your_pokemon_display(your_pokemon = your_pokemon):
+    i = 1
+    pokemon_alive = []
+    for pokemon in your_pokemon.values():
+        if pokemon.status is True:
+            print(f'{i}. {pokemon.name}')
+            hp_bar(current_hp=pokemon.hp,max_hp=pokemon.max_hp)
+            i += 1
+            pokemon_alive.append(pokemon)
+    return pokemon_alive
+
+def pokemon_in_battle(pokemon,opp_pokemon):
+    pass
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
     pass
@@ -176,7 +191,8 @@ def pokemon_logger(level, pokemon):
     base_spdef = int(numbers[12].text)
     base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
-    opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=,base_speed=base_speed,base_attack=base_attack,base_defense=base_defense,base_hp = base_hp)
+    opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=,base_speed=base_speed,base_attack=base_attack,
+                          base_defense=base_defense,base_hp = base_hp,base_spatk=base_spatk,base_spdef=base_spdef)
     return opp_pokemon 
 
 def pokemon_caught(level, pokemon):
@@ -201,16 +217,28 @@ def pokemon_caught(level, pokemon):
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-    MyPokemon()
+    MyPokemon(level=level)
 
 
 
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
-    pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
-    # getting pokemon data
+    opp_pokemon = pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
+    print(f'A wild lvl. {opp_pokemon.level} {opp_pokemon.name} has appeared!')
+    pokemon_alive = your_pokemon_display(your_pokemon)
+    prompt = input('Which Pokemon would you like to pick? (Type the number of the pokemon/ type p for pokeball) ')
+    if prompt.lower() == 'p':
+        pass
+    else:
+        pokemon = pokemon_alive[int(prompt)-1]                       # the pokemon you selected
+        print(f'Go out {pokemon.name}!')
+        while True:
+            pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+
+        
+
     
 
-    print(' '.join(your_pokemon.keys()) + ' /n Which Pokemon would you like to pick? ')
+
 
 def type_logger(soup):
     pokedex_data = soup.find('div' , class_ = 'grid-col span-md-6 span-lg-4')
