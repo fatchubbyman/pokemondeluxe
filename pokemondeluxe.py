@@ -20,7 +20,7 @@ class MyPokemon:
                  ,base_spdef:int,fainted:bool,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
-        self.max_hp = max_hp(base = base_hp)
+        self.max_hp = max_hp(base = base_hp,level = level,iv = iv)
         self.hp = hp
         self.type1 = type1
         self.type2 = type2
@@ -43,7 +43,7 @@ class MyPokemon:
         self.exp_type = exp_type
         self.exp_cap = exp_cap_changer(level = level,typee = exp_type)
         self.iv = rd.randrange(20,32)
-        self.fainted = fainted
+        self.fainted = fainted_check(hp = hp)
     
 
     def level_up(self):
@@ -62,7 +62,8 @@ class Moves:
         self.power = power
 
 class Pokemon(MyPokemon):
-    def __i      
+    def __init__(self, base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2=None, level=5, moveset={}, exp=0):
+        super().__init__(base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2, level, moveset, exp)     
         del self.evolution 
         del self.iv
         del self.evolution_level
@@ -98,6 +99,15 @@ def exp_cap_changer(level,typee):
         elif 36 <= level < 100:
             exp_cap = ((level+1)**3)*(((level+1)/2)+32)/50 - (((level)**3)*(((level)/2)+32)/50)
     return exp_cap
+
+def fainted_check(pokemon):
+    if pokemon.hp <= 0:
+        return True
+    return False
+
+def max_hp(level,base_hp,iv):
+    max_hp = ((2 * base_hp + iv) * level) // 100 + level + 10
+    return max_hp
 
 def effect_multiplier(move_type, type1, type2=None):
     type_chart = {
@@ -168,22 +178,39 @@ def your_pokemon_display(your_pokemon = your_pokemon):
             pokemon_alive.append(pokemon)
     return pokemon_alive
 
-def pokemon_in_battle(pokemon,opp_pokemon):
-    pass
+def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokemon 
+    if pokemon.speed >= opp_pokemon.speed:
+        move = move_display(pokemon=pokemon)
+        # move made against opp_pokemon
+        if fainted_check(opp_pokemon) is True:
+            print(f'{opp_pokemon} fainted!')
+
+            return True
+        opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
+        opp_move = opp_pokemon.moveset[opp_move]
+        # move made against your pokemon
+        if fainted_check(pokemon) is True:
+            print(f'Your {pokemon} fainted!')
+            return True
+    else:
+        opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
+        opp_move = opp_pokemon.moveset[opp_move]
+        # move made against your pokemon
+        if fainted_check(pokemon) is True:
+            print(f'{opp_pokemon} fainted!')
+            return True
+        move = move_display(pokemon=pokemon)
+        # move made against opp_pokemon
+        if fainted_check(opp_pokemon) is True:
+            print(f'{opp_pokemon} fainted!')
+            return True
+
+            
+
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
     pass
 
-def wild_movesets_logger(soup):
-    moveset = {}
-    data_table = soup.find('table' , class_ = 'data-table')
-    trs = data_table.find_all('tr')
-    for tr in trs[:4]:
-        name = tr.find('td', class_ = 'cell_name').text.strip()
-        typex = tr.find('td' , class_ = 'cell-icon').text.strip()
-        power = (tr.find_all('td', class_ = 'cell-num')[0].text.strip())
-        accuracy = int(tr.find_all('td', class_ = 'cell-num')[0].text.strip())
-        moveset[name] = Moves(typex=typex,power=power,accuracy=accuracy,damage=#??)
 
 
 def evolving_checker():
@@ -202,7 +229,8 @@ def pokemon_logger(level, pokemon):
     base_spdef = int(numbers[12].text)
     base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
-    moveset = movesets_logger(soup)
+    moveset = {}
+    default_moves_logger(soup=soup,moveset=moveset) 
     opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=moveset,base_speed=base_speed,base_attack=base_attack,
                           base_defense=base_defense,base_hp = base_hp,base_spatk=base_spatk,base_spdef=base_spdef)
     return opp_pokemon 
@@ -241,10 +269,11 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     if prompt.lower() == 'p':
         pass
     else:
-        pokemon = pokemon_alive[int(prompt)-1]                       # the pokemon you selected
+        pokemon = pokemon_alive[int(prompt)-1]                              # the pokemon you selected
         print(f'Go out {pokemon.name}!')
         while True:
-            pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+            pokeball_status = pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+
 
 
         
@@ -263,6 +292,14 @@ def type_logger(soup):
         type1 = types[0].text.strip()
         type2 = None
     return [type1,type2]
+
+def move_display(pokemon):
+    for i in len(list(pokemon.moveset.keys())):
+        print(list(pokemon.moveset.keys())[i])
+    move = input('Which move do you want to choose? (Select the move no.) ')
+    return move
+
+
 
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
@@ -284,8 +321,6 @@ select_element = region_soup.find('select', onchange = onchange_value)
 routes = select_element.find_all('option')
 for route in routes[1:]:
     route()
-
-
 
 def route(location = route):
     print(location.text + ':')
