@@ -29,7 +29,7 @@ class MyPokemon:
         self.evolution = evolution
         self.evolution_level = evolution_level
         self.base_atk = base_atk
-        self.attack = attack_finder(base = base_atk)
+        self.attack = attack_finder(base = base_atk,level = level,iv = iv)
         self.base_defense = base_defense
         self.defense = defense_finder(base = defense)
         self.base_spatk = base_spatk
@@ -109,6 +109,15 @@ def max_hp(level,base_hp,iv):
     max_hp = ((2 * base_hp + iv) * level) // 100 + level + 10
     return max_hp
 
+def attack_finder(level,iv,base_atk):
+    attack = ((2 * base_atk + iv) * level) // 100 + 5
+    return attack
+
+def defense_finder(level,iv,base_defense):
+    defense = ((2 * base_defense + iv) * level) // 100 + 5
+    return defense
+
+
 def effect_multiplier(move_type, type1, type2=None):
     type_chart = {
         'Normal': {'Rock': 0.5, 'Steel': 0.5, 'Ghost': 0},
@@ -178,13 +187,24 @@ def your_pokemon_display(your_pokemon = your_pokemon):
             pokemon_alive.append(pokemon)
     return pokemon_alive
 
+def pokemon_in_battle(pokemon,opp_pokemon):
+    print(pokemon.name)
+    hp_bar(max_hp=pokemon.max_hp,current_hp=pokemon.hp)
+    print('.')
+    print(opp_pokemon.name)
+    hp_bar(max_hp=opp_pokemon.max_hp,current_hp=opp_pokemon.hp)
+
 def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokemon 
     if pokemon.speed >= opp_pokemon.speed:
         move = move_display(pokemon=pokemon)
         # move made against opp_pokemon
+        print(pokemon.name)
+        hp_bar(max_hp=pokemon.max_hp,current_hp=pokemon.hp)
+        print('.')
+        print(opp_pokemon.name)
+        hp_bar(max_hp=opp_pokemon.max_hp,current_hp=opp_pokemon.hp)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
-
             return True
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
