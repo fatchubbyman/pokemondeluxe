@@ -118,9 +118,14 @@ def defense_finder(level,iv,base_defense):
     defense = ((2 * base_defense + iv) * level) // 100 + 5
     return defense
 
-def spatk_finder(level, base_sp_attack, iv):
+def spatk_finder(level, base_sp_attack, iv,):
     spatk = ((2 * base_sp_attack + iv) * level) // 100 + 5
     return spatk
+
+def spdef_finder(level, base_sp_defense, iv):
+    sp_def = ((2 * base_sp_defense + iv) * level) // 100 + 5
+    return sp_def
+    
 
 
 def effect_multiplier(move_type, type1, type2=None):
@@ -227,7 +232,9 @@ def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokem
 
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
+    evolving_checker(your_pokemon)
     pass
+
 
 
 
@@ -280,14 +287,11 @@ def pokemon_caught(level, pokemon):
 def plot_pokemon_hp(your_pokemon):
     names = [pokemon.name for pokemon in your_pokemon.values()]
     hp_values = [pokemon.hp for pokemon in your_pokemon.values()]
-    
     plt.figure(figsize=(10, 6))
     plt.bar(names, hp_values, color='lightgreen')
-    
     plt.title('Pokemon HP Stats')
     plt.xlabel('Pokemon')
     plt.ylabel('HP')
-    
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
     plt.show()
