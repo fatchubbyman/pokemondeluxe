@@ -10,9 +10,10 @@
 from bs4 import BeautifulSoup
 import requests
 import random as rd
-import matplotlib                  # for showing hp of every pokemon after every battle
+import matplotlib.pyplot as plt                  # for showing hp of every pokemon after every battle
 import numpy as np
 your_pokemon = {}
+money = 10000
 
 class MyPokemon:
     def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
@@ -33,7 +34,7 @@ class MyPokemon:
         self.base_defense = base_defense
         self.defense = defense_finder(base = defense)
         self.base_spatk = base_spatk
-        self.spatk = spatk_finder(base = base_spatk)
+        self.spatk = spatk_finder(base = base_spatk,level = level, iv = iv)
         self.base_spdef = base_spdef
         self.spdef = spdef_finder(base = base_spdef)
         self.base_speed = base_speed
@@ -117,6 +118,10 @@ def defense_finder(level,iv,base_defense):
     defense = ((2 * base_defense + iv) * level) // 100 + 5
     return defense
 
+def spatk_finder(level, base_sp_attack, iv):
+    spatk = ((2 * base_sp_attack + iv) * level) // 100 + 5
+    return spatk
+
 
 def effect_multiplier(move_type, type1, type2=None):
     type_chart = {
@@ -187,7 +192,7 @@ def your_pokemon_display(your_pokemon = your_pokemon):
             pokemon_alive.append(pokemon)
     return pokemon_alive
 
-def pokemon_in_battle(pokemon,opp_pokemon):
+def pokemon_battling(pokemon,opp_pokemon):
     print(pokemon.name)
     hp_bar(max_hp=pokemon.max_hp,current_hp=pokemon.hp)
     print('.')
@@ -198,34 +203,27 @@ def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokem
     if pokemon.speed >= opp_pokemon.speed:
         move = move_display(pokemon=pokemon)
         # move made against opp_pokemon
-        print(pokemon.name)
-        hp_bar(max_hp=pokemon.max_hp,current_hp=pokemon.hp)
-        print('.')
-        print(opp_pokemon.name)
-        hp_bar(max_hp=opp_pokemon.max_hp,current_hp=opp_pokemon.hp)
+        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
-            return True
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
         # move made against your pokemon
         if fainted_check(pokemon) is True:
             print(f'Your {pokemon} fainted!')
-            return True
     else:
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
         # move made against your pokemon
+        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(pokemon) is True:
             print(f'{opp_pokemon} fainted!')
-            return True
         move = move_display(pokemon=pokemon)
         # move made against opp_pokemon
+        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
-            return True
 
-            
 
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
@@ -262,11 +260,11 @@ def pokemon_caught(level, pokemon):
     stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
     numbers = stats_table.find_all('td', class_ = 'cell-num')
     base_hp = int(numbers[0].text)
-    attack = int(numbers[3].text)
-    defense = int(numbers[6].text)
-    spatk = int(numbers[9].text)
-    spdef = int(numbers[12].text)
-    speed = int(numbers[15].text)
+    base_atk = int(numbers[3].text)
+    base_defense = int(numbers[6].text)
+    base_spatk = int(numbers[9].text)
+    base_spdef = int(numbers[12].text)
+    base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
     iv = rd.randrange(20,32)
     trs = soup.find_all('tr')
@@ -279,7 +277,26 @@ def pokemon_caught(level, pokemon):
     exp_type = growth_rate
     MyPokemon(level=level)
 
+def plot_pokemon_hp(your_pokemon):
+    names = [pokemon.name for pokemon in your_pokemon.values()]
+    hp_values = [pokemon.hp for pokemon in your_pokemon.values()]
+    
+    plt.figure(figsize=(10, 6))
+    plt.bar(names, hp_values, color='lightgreen')
+    
+    plt.title('Pokemon HP Stats')
+    plt.xlabel('Pokemon')
+    plt.ylabel('HP')
+    
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    plt.show()
 
+def pokemon_center(your_pokemon=your_pokemon):
+    print('Welcome to the Pokémon Center! ')
+    for value in your_pokemon.values():
+        value.hp = value.max_hp
+    plot_pokemon_hp(your_pokemon=your_pokemon)
 
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     opp_pokemon = pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
@@ -292,13 +309,8 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         pokemon = pokemon_alive[int(prompt)-1]                              # the pokemon you selected
         print(f'Go out {pokemon.name}!')
         while True:
-            pokeball_status = pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+            pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
 
-
-
-        
-
-    
 
 
 
