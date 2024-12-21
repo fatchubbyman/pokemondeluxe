@@ -58,9 +58,10 @@ class MyPokemon:
 class Moves:
     def __init__(self,typex,damage,accuracy,power):
         self.typex = typex
-        self.damage = damage
+        self.damage = damage    #this is a function of the other pokemons type
         self.accuracy = accuracy
         self.power = power
+        self.effectiveness    #this is a function of the other pokemons type as well
 
 class Pokemon(MyPokemon):
     def __init__(self, base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2=None, level=5, moveset={}, exp=0):
@@ -93,7 +94,7 @@ def exp_cap_changer(level,typee):
     elif typee == 'Slow':
         exp_cap = 5*(((level+1)**3)/4) - (5*((level**3)/4))
     elif typee == 'Fluctuating':
-        if level < 15:
+        if level < 15:      
             exp_cap = (((level+1)**3)*((level+1)+1/3) + 24)/50 - ((((level)**3)*((level)+1/3) + 24)/50)
         elif 36 > level >= 15:
             exp_cap = ((level+1)**3)*((level+1)+14)/50 - ((level**3)*(level+14)/50)
@@ -211,11 +212,13 @@ def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokem
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
+            plot_pokemon_hp()
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
         # move made against your pokemon
         if fainted_check(pokemon) is True:
             print(f'Your {pokemon} fainted!')
+            plot_pokemon_hp()
     else:
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
@@ -223,12 +226,13 @@ def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokem
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(pokemon) is True:
             print(f'{opp_pokemon} fainted!')
+            plot_pokemon_hp()
         move = move_display(pokemon=pokemon)
         # move made against opp_pokemon
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
-
+            plot_pokemon_hp()
 
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
@@ -241,7 +245,7 @@ def clean_up_crew():      #impletments all the functions that need to be used af
 def evolving_checker():
     pass
 
-def pokemon_logger(level, pokemon):
+def pokemon_logger(level, pokemon,moveset = {}):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
     rqsts = requests.get(url)
     soup = BeautifulSoup(rqsts.content,'lxml')
@@ -254,8 +258,8 @@ def pokemon_logger(level, pokemon):
     base_spdef = int(numbers[12].text)
     base_speed = int(numbers[15].text)
     [type1,type2] = type_logger(soup)
-    moveset = {}
-    default_moves_logger(soup=soup,moveset=moveset) 
+    if moveset == {}:
+        default_moves_logger(soup=soup,moveset=moveset) 
     opp_pokemon = Pokemon(name=pokemon,level=level,type1=type1,type2=type2,moveset=moveset,base_speed=base_speed,base_attack=base_attack,
                           base_defense=base_defense,base_hp = base_hp,base_spatk=base_spatk,base_spdef=base_spdef)
     return opp_pokemon 
@@ -284,7 +288,7 @@ def pokemon_caught(level, pokemon):
     exp_type = growth_rate
     MyPokemon(level=level)
 
-def plot_pokemon_hp(your_pokemon):
+def plot_pokemon_hp(your_pokemon=your_pokemon):
     names = [pokemon.name for pokemon in your_pokemon.values()]
     hp_values = [pokemon.hp for pokemon in your_pokemon.values()]
     plt.figure(figsize=(10, 6))
@@ -300,7 +304,7 @@ def pokemon_center(your_pokemon=your_pokemon):
     print('Welcome to the Pokémon Center! ')
     for value in your_pokemon.values():
         value.hp = value.max_hp
-    plot_pokemon_hp(your_pokemon=your_pokemon)
+    plot_pokemon_hp()
 
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     opp_pokemon = pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
@@ -314,8 +318,33 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         print(f'Go out {pokemon.name}!')
         while True:
             pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
-
-
+    
+def trainer_battle(trainer,your_pokemon=your_pokemon):
+    names_tr = trainer.find_all('tr')[1]
+    trainer_name = names_tr.find('td')
+    print(f'{trainer_name.text.strip()} wants to battle!')
+    pokemen = trainer_name.find_all_next('td')
+    trainer_pokemon = {}
+    i = 0
+    for pokemon in pokemen:
+        name = pokemon.find('a').text.strip()
+        levels_tr = trainer.find_all('tr')[2]
+        level = levels_tr.find_all('td',class_ ='level')[i].text.strip()
+        level = int(level.replace('Level ',''))
+        moves_tr = trainer.find_all('tr')[4]
+        moves_table = moves_tr.find_all('td', class_ = 'bor')[i]
+        brs = moves_table.find_all('br')
+        moveset = {}
+        for move in brs:
+            name = move.find('a')
+            href = name.get('href')
+            url = 'https://www.serebii.net' + href
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content,'lxml')
+            typex = soup.find()
+            moveset[name.text.strip()] = Moves(typex=,accuracy=,power=)
+        trainer_pokemon[name] = pokemon_logger(level=level,pokemon=name,moveset=moveset)
+        i += 1
 
 
 def type_logger(soup):
@@ -335,14 +364,14 @@ def move_display(pokemon):
     move = input('Which move do you want to choose? (Select the move no.) ')
     return move
 
+def wait():
+    for i in range(3):
+        print('.')
 
 
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
 game_choice = game_choice.title()
-    
-
-
 
 
 location_site = 'https://www.serebii.net/pokearth/'
@@ -400,7 +429,15 @@ def route(location = route):
                 continue
             wild_battle(opponent_pokemon=selected_pokemon,level= level)
         #trainer battle 
-    
+        wait()
+        trainers = location.find_all('table', class_ = 'trainer')
+        if trainers is not None:
+            for trainer in trainers:
+                trainer = trainers.find('td', class_ = 'trainer')
+                wait()
+                trainer_battle(trainer=trainer)
+                trainers.remove(trainer)
+
         
 
 
