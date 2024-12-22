@@ -12,6 +12,7 @@ import requests
 import random as rd
 import matplotlib.pyplot as plt                  # for showing hp of every pokemon after every battle
 import numpy as np
+import time
 your_pokemon = {}
 money = 10000
 
@@ -127,7 +128,9 @@ def spdef_finder(level, base_sp_defense, iv):
     sp_def = ((2 * base_sp_defense + iv) * level) // 100 + 5
     return sp_def
     
-
+def speed_finder(level, base_speed, iv):
+    speed = ((2 * base_speed + iv) * level) // 100 + 5
+    return speed
 
 def effect_multiplier(move_type, type1, type2=None):
     type_chart = {
@@ -239,9 +242,6 @@ def clean_up_crew():      #impletments all the functions that need to be used af
     evolving_checker(your_pokemon)
     pass
 
-
-
-
 def evolving_checker():
     pass
 
@@ -318,33 +318,38 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         print(f'Go out {pokemon.name}!')
         while True:
             pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+
+def move_stat_finder(href):
+    url = 'https://www.serebii.net' + href
+    rqsts = requests.get(url)
+    soup = BeautifulSoup(rqsts.content,'lxml')
+    
+    return [typex,accuracy,power]
     
 def trainer_battle(trainer,your_pokemon=your_pokemon):
     names_tr = trainer.find_all('tr')[1]
+    levels_tr = trainer.find_all('tr')[2]
+    moveset_tr = trainer.find_all('tr')[4]
     trainer_name = names_tr.find('td')
     print(f'{trainer_name.text.strip()} wants to battle!')
-    pokemen = trainer_name.find_all_next('td')
+    pokemn = names_tr.find_all('td', align = 'center')
     trainer_pokemon = {}
-    i = 0
-    for pokemon in pokemen:
-        name = pokemon.find('a').text.strip()
-        levels_tr = trainer.find_all('tr')[2]
-        level = levels_tr.find_all('td',class_ ='level')[i].text.strip()
-        level = int(level.replace('Level ',''))
-        moves_tr = trainer.find_all('tr')[4]
-        moves_table = moves_tr.find_all('td', class_ = 'bor')[i]
-        brs = moves_table.find_all('br')
+    moveset = {}
+    for i in range(len(pokemn)):
+        name = pokemn[i].text.strip()
+        level = int(levels_tr.find_all('td', class_ = 'level')[i])
         moveset = {}
-        for move in brs:
-            name = move.find('a')
-            href = name.get('href')
-            url = 'https://www.serebii.net' + href
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content,'lxml')
-            typex = soup.find()
-            moveset[name.text.strip()] = Moves(typex=,accuracy=,power=)
-        trainer_pokemon[name] = pokemon_logger(level=level,pokemon=name,moveset=moveset)
-        i += 1
+        move_table = moveset_tr.find_all('td',class_ = 'bor')[i]
+        attacks = move_table.find_all('a')
+        for attack in attacks:
+            name = attack.text.strip()
+            href = attack.get('href')
+            [typex,accuracy,power] = move_stat_finder(href)
+            moveset[name] = Moves(typex=typex,accuracy=accuracy,power=power)
+        trainer_pokemon[pokemon_logger(pokemon=name,level = level,moveset = moveset)]
+
+
+
 
 
 def type_logger(soup):
@@ -367,6 +372,7 @@ def move_display(pokemon):
 def wait():
     for i in range(3):
         print('.')
+        time.sleep(0.3)
 
 
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
@@ -414,7 +420,7 @@ def route(location = route):
             for name,finding_rate,level in zip(names,finding_rates,levels):
                 level = level.strip("() ")
                 x,y = map(int, level.split(' - '))
-                wild_pokemon[name.text.strip()] = [int((finding_rate.text.strip().replace('%',''))),[x,y]]    #pidgey: 20%,5  #finding rate and level
+                wild_pokemon[name.text.strip()] = [int(((finding_rate.text.strip()).replace('%',''))),[x,y]]    #pidgey: 20%,5  #finding rate and level
         total_rate = sum(data[0] for data in wild_pokemon.values())
         normalized_rates = {name: (data[0] / total_rate) * 100 for name, data in wild_pokemon.items()}
         choices = list(normalized_rates.keys())
