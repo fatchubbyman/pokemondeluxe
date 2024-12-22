@@ -1,20 +1,12 @@
-#                                                     ideas/scrapped ideas
-# after every pokemon battle, display the hp of all your pokemon, and ask which one to send next
-# hp_cap exp_cap needs to be in a function and it should always be refurbished at a pokemon_center or level up respectively
-# routes need to be in a specific order for every game, otherwise the hard trainers will show up and there will be no continuity in the game
-# a while loop runs in every route for training your pokemon, and catching new ones, and when you are done training for pokemon, the next battle will be against a trainer 
-# when a trainer is met, a new dictionary needs to be initialised which will have the objects of the pokemon they have
-# for gen 3 default moves need to be initialised because there is no data for that
-# a battle() function will run with your prompts and remote control the battle with the opponent pokemon
-# 
 from bs4 import BeautifulSoup
 import requests
 import random as rd
 import matplotlib.pyplot as plt                  # for showing hp of every pokemon after every battle
-import numpy as np
 import time
 your_pokemon = {}
+global money
 money = 10000
+global pokeballs
 pokeballs = 6
 
 class MyPokemon:
@@ -362,6 +354,7 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
                 pokemon = pokemon_alive[int(prompt)-1]
             elif status == 'win':
                 break
+    return 'won'
 
 def pokemon_in_battle(pokemon, opp_pokemon, wild=True):
     if fainted_check(pokemon):
@@ -422,7 +415,7 @@ for element in select_element:
         break
 select_element = region_soup.find('select', onchange = onchange_value)
 routes = select_element.find_all('option')
-for route in routes[1:]:
+for route in routes[1:]:         # need to get a sequence of routes which help the player to play smoothly
     route()
 
 def route(location = route):
@@ -474,7 +467,8 @@ def route(location = route):
                 trainer = trainers.find('td', class_ = 'trainer')
                 wait()
                 trainer_battle(trainer=trainer)
-                trainers.remove(trainer)
+                if trainer_battle == 'won':
+                    trainers.remove(trainer)
 
         
 
