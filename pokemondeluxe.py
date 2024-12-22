@@ -19,7 +19,7 @@ money = 10000
 class MyPokemon:
     def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
                  exp_type:str,evolution:dict,name: str,iv:int,hp :int,attack: int,defense: int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
-                 ,base_spdef:int,fainted:bool,type2 = None, level = 5,moveset={},exp = 0):
+                 ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
         self.max_hp = max_hp(base = base_hp,level = level,iv = iv)
@@ -57,16 +57,18 @@ class MyPokemon:
         pass
 
 class Moves:
-    def __init__(self,typex,damage,accuracy,power):
+    def __init__(self, typex, accuracy, power):
         self.typex = typex
-        self.damage = damage    #this is a function of the other pokemons type
         self.accuracy = accuracy
         self.power = power
-        self.effectiveness    #this is a function of the other pokemons type as well
+    def damage(self, pokemon):
+        effectiveness = effect_multiplier(move_type=self.typex, type1=pokemon.type1, type2=pokemon.type2)
+        damage = self.power * effectiveness
+        return damage
 
 class Pokemon(MyPokemon):
     def __init__(self, base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2=None, level=5, moveset={}, exp=0):
-        super().__init__(base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2, level, moveset, exp)     
+        super().__init__(base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2, level, moveset, exp)    
         del self.evolution 
         del self.iv
         del self.evolution_level
@@ -208,30 +210,34 @@ def pokemon_battling(pokemon,opp_pokemon):
     print(opp_pokemon.name)
     hp_bar(max_hp=opp_pokemon.max_hp,current_hp=opp_pokemon.hp)
 
-def pokemon_in_battle(pokemon,opp_pokemon):                   # battling 2 pokemon 
+def pokemon_in_battle(pokemon,opp_pokemon,wild = True):                   # battling 2 pokemon 
     if pokemon.speed >= opp_pokemon.speed:
         move = move_display(pokemon=pokemon)
-        # move made against opp_pokemon
+        key_at_position = list(pokemon.moveset.keys())[move-1]
+        attack = pokemon.moveset[key_at_position]
+        opp_pokemon.hp -= attack.damage(typex = attack.typex,pokemon=pokemon)
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
             plot_pokemon_hp()
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
-        # move made against your pokemon
+        pokemon.hp -= opp_move.damage
         if fainted_check(pokemon) is True:
             print(f'Your {pokemon} fainted!')
             plot_pokemon_hp()
     else:
         opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
         opp_move = opp_pokemon.moveset[opp_move]
-        # move made against your pokemon
+        pokemon.hp -= opp_move.damage
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(pokemon) is True:
             print(f'{opp_pokemon} fainted!')
             plot_pokemon_hp()
         move = move_display(pokemon=pokemon)
-        # move made against opp_pokemon
+        key_at_position = list(pokemon.moveset.keys())[move-1]
+        attack = pokemon.moveset[key_at_position]
+        opp_pokemon.hp -= attack.damage(typex = attack.typex,pokemon=pokemon)
         pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
         if fainted_check(opp_pokemon) is True:
             print(f'{opp_pokemon} fainted!')
@@ -358,13 +364,10 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
     pokemon_alive = your_pokemon_display(your_pokemon)
     prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
     pokemon = pokemon_alive[int(prompt)-1]  
-    while True:
-        pokemon_in_battle()
-        pokemon_battling()
-    
-
-
-
+    for value in trainer_pokemon.values():
+        while True:
+            pokemon_in_battle(pokemon=pokemon,opp_pokemon=value,wild=False)
+            pokemon_battling(pokemon=pokemon,opp_pokemon=value)
 
 
 def type_logger(soup):
@@ -381,7 +384,7 @@ def type_logger(soup):
 def move_display(pokemon):
     for i in len(list(pokemon.moveset.keys())):
         print(list(pokemon.moveset.keys())[i])
-    move = input('Which move do you want to choose? (Select the move no.) ')
+    move = int(input('Which move do you want to choose? (Select the move no.) '))
     return move
 
 def wait():
@@ -393,7 +396,6 @@ def wait():
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
 game_choice = game_choice.title()
-
 
 location_site = 'https://www.serebii.net/pokearth/'
 reachingout = requests.get(location_site)
