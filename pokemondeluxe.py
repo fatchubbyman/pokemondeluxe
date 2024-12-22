@@ -15,6 +15,7 @@ import numpy as np
 import time
 your_pokemon = {}
 money = 10000
+pokeballs = 6
 
 class MyPokemon:
     def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
@@ -210,39 +211,6 @@ def pokemon_battling(pokemon,opp_pokemon):
     print(opp_pokemon.name)
     hp_bar(max_hp=opp_pokemon.max_hp,current_hp=opp_pokemon.hp)
 
-def pokemon_in_battle(pokemon,opp_pokemon,wild = True):                   # battling 2 pokemon 
-    if pokemon.speed >= opp_pokemon.speed:
-        move = move_display(pokemon=pokemon)
-        key_at_position = list(pokemon.moveset.keys())[move-1]
-        attack = pokemon.moveset[key_at_position]
-        opp_pokemon.hp -= attack.damage(typex = attack.typex,pokemon=pokemon)
-        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
-        if fainted_check(opp_pokemon) is True:
-            print(f'{opp_pokemon} fainted!')
-            plot_pokemon_hp()
-        opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
-        opp_move = opp_pokemon.moveset[opp_move]
-        pokemon.hp -= opp_move.damage
-        if fainted_check(pokemon) is True:
-            print(f'Your {pokemon} fainted!')
-            plot_pokemon_hp()
-    else:
-        opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
-        opp_move = opp_pokemon.moveset[opp_move]
-        pokemon.hp -= opp_move.damage
-        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
-        if fainted_check(pokemon) is True:
-            print(f'{opp_pokemon} fainted!')
-            plot_pokemon_hp()
-        move = move_display(pokemon=pokemon)
-        key_at_position = list(pokemon.moveset.keys())[move-1]
-        attack = pokemon.moveset[key_at_position]
-        opp_pokemon.hp -= attack.damage(typex = attack.typex,pokemon=pokemon)
-        pokemon_battling(pokemon=pokemon,opp_pokemon=opp_pokemon)
-        if fainted_check(opp_pokemon) is True:
-            print(f'{opp_pokemon} fainted!')
-            plot_pokemon_hp()
-
 
 def clean_up_crew():      #impletments all the functions that need to be used after battling, like money,evolving_checker, plots the hp of pokemon
     evolving_checker(your_pokemon)
@@ -312,6 +280,24 @@ def pokemon_center(your_pokemon=your_pokemon):
         value.hp = value.max_hp
     plot_pokemon_hp()
 
+def pokeball_prompt(opp_pokemon,pokeballs = pokeballs):   
+    prompt = input('Press Enter to throw a pokeball! ')
+    if prompt == '' and pokeballs > 0:
+        pokeballs -= 1
+        for i in range(1, 4):
+            print(i * '*')
+            time.sleep(1)
+        options = [True, False]
+        probabilities = [0.9, 0.1]
+        caught_or_not = rd.choices(options, probabilities)[0]
+        if caught_or_not is True:
+            print(f'Congratulations! You caught {opp_pokemon.name}.')
+            your_pokemon[opp_pokemon.name] = pokemon_caught(pokemon=opp_pokemon.name,level=opp_pokemon.level)
+        else:
+            pokeball_prompt()
+    else:
+        print(f'{opp_pokemon.name} got away!')
+
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     opp_pokemon = pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
     print(f'A wild lvl. {opp_pokemon.level} {opp_pokemon.name} has appeared!')
@@ -323,7 +309,10 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         pokemon = pokemon_alive[int(prompt)-1]                              # the pokemon you selected
         print(f'Go out {pokemon.name}!')
         while True:
-            pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+            status = pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
+            if status == 'win':
+                pokeball_prompt(opp_pokemon=opp_pokemon)
+                    
 
 def move_stat_finder(href):
     url = 'https://www.serebii.net' + href
@@ -361,14 +350,40 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
             [typex,accuracy,power] = move_stat_finder(href)
             moveset[name] = Moves(typex=typex,accuracy=accuracy,power=power)
         trainer_pokemon[pokemon_logger(pokemon=name,level = level,moveset = moveset)]
-    pokemon_alive = your_pokemon_display(your_pokemon)
-    prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
-    pokemon = pokemon_alive[int(prompt)-1]  
     for value in trainer_pokemon.values():
+        pokemon_alive = your_pokemon_display(your_pokemon)
+        prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
+        pokemon = pokemon_alive[int(prompt)-1]  
         while True:
-            pokemon_in_battle(pokemon=pokemon,opp_pokemon=value,wild=False)
-            pokemon_battling(pokemon=pokemon,opp_pokemon=value)
+            status = pokemon_in_battle(pokemon=pokemon,opp_pokemon=value,wild=False)
+            if status == 'fainted':
+                pokemon_alive = your_pokemon_display(your_pokemon)
+                prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
+                pokemon = pokemon_alive[int(prompt)-1]
+            elif status == 'win':
+                break
 
+def pokemon_in_battle(pokemon, opp_pokemon, wild=True):
+    if fainted_check(pokemon):
+        print(f"Your {pokemon} fainted!")
+        plot_pokemon_hp()
+        return 'fainted'
+    if fainted_check(opp_pokemon):
+        print(f"{opp_pokemon} fainted!")
+        plot_pokemon_hp()
+        return 'win'
+    if pokemon.speed >= opp_pokemon.speed:
+        move = move_display(pokemon=pokemon)
+        key_at_position = list(pokemon.moveset.keys())[move - 1]
+        attack = pokemon.moveset[key_at_position]
+        opp_pokemon.hp -= attack.damage(typex=attack.typex, pokemon=pokemon)
+        pokemon_battling(pokemon=pokemon, opp_pokemon=opp_pokemon)
+    else:
+        opp_move = rd.choice(list(opp_pokemon.moveset.keys()))
+        opp_move = opp_pokemon.moveset[opp_move]
+        pokemon.hp -= opp_move.damage
+        pokemon_battling(pokemon=pokemon, opp_pokemon=opp_pokemon)
+    pokemon_in_battle(pokemon, opp_pokemon, wild)
 
 def type_logger(soup):
     pokedex_data = soup.find('div' , class_ = 'grid-col span-md-6 span-lg-4')
