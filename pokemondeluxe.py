@@ -323,7 +323,15 @@ def move_stat_finder(href):
     url = 'https://www.serebii.net' + href
     rqsts = requests.get(url)
     soup = BeautifulSoup(rqsts.content,'lxml')
-    
+    dex_table = soup.find('table',class_ = 'dextable')
+    type_tr = dex_table.find_all('tr')[1]
+    typex = type_tr.find_all('td', class_ = 'cen')[1]
+    a_tag = typex.find('a')
+    typex = a_tag.get('href').replace('/attackdex-bw/','')
+    typex = typex.replace('.shtml','').title()
+    power_tr = dex_table.find_all('tr')[3]
+    power = int(power_tr.find_all('td',class_ = 'cen')[1].text.strip())
+    accuracy = int(power_tr.find_all('td',class_ = 'cen')[2].text.strip())
     return [typex,accuracy,power]
     
 def trainer_battle(trainer,your_pokemon=your_pokemon):
@@ -347,6 +355,13 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
             [typex,accuracy,power] = move_stat_finder(href)
             moveset[name] = Moves(typex=typex,accuracy=accuracy,power=power)
         trainer_pokemon[pokemon_logger(pokemon=name,level = level,moveset = moveset)]
+    pokemon_alive = your_pokemon_display(your_pokemon)
+    prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
+    pokemon = pokemon_alive[int(prompt)-1]  
+    while True:
+        pokemon_in_battle()
+        pokemon_battling()
+    
 
 
 
