@@ -10,8 +10,8 @@ global pokeballs
 pokeballs = 6
 
 class MyPokemon:
-    def __init__(self, base_hp: int,type1:str, spatk: int ,spdef: int,speed: int,
-                 exp_type:str,evolution:dict,name: str,iv:int,hp :int,attack: int,defense: int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
+    def __init__(self, base_hp: int,type1:str, spatk: int ,
+                 exp_type:str,evolution:dict,name: str,iv:int,hp :int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
                  ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
@@ -26,7 +26,7 @@ class MyPokemon:
         self.base_atk = base_atk
         self.attack = attack_finder(base = base_atk,level = level,iv = iv)
         self.base_defense = base_defense
-        self.defense = defense_finder(base = defense)
+        self.defense = defense_finder(base = base_defense)
         self.base_spatk = base_spatk
         self.spatk = spatk_finder(base = base_spatk,level = level, iv = iv)
         self.base_spdef = base_spdef
@@ -44,24 +44,22 @@ class MyPokemon:
     def level_up(self):
         if self.exp >= self.exp_cap:  # Check if experience is enough to level up
             self.level += 1
-            self.exp = 0              # Reset experience after leveling up
-    
-    def __repr__(self):         # there should be a function that resets the hp of all the pokemon after going to the health center
-        pass
+            self.exp = (self.exp_cap-self.exp)              # Reset experience after leveling up
 
 class Moves:
     def __init__(self, typex, accuracy, power):
         self.typex = typex
         self.accuracy = accuracy
         self.power = power
+
     def damage(self, pokemon):
         effectiveness = effect_multiplier(move_type=self.typex, type1=pokemon.type1, type2=pokemon.type2)
         damage = self.power * effectiveness
         return damage
 
 class Pokemon(MyPokemon):
-    def __init__(self, base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2=None, level=5, moveset={}, exp=0):
-        super().__init__(base_hp, type1, spatk, spdef, speed, exp_type, evolution, name, iv, hp, attack, defense, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, fainted, type2, level, moveset, exp)    
+    def __init__(self, base_hp, type1, spatk, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2=None, level=5, moveset={}, exp=0):
+        super().__init__(base_hp, type1, spatk, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2, level, moveset, exp) 
         del self.evolution 
         del self.iv
         del self.evolution_level
@@ -173,8 +171,7 @@ def default_moves_logger(soup,moveset):
         typee = tr.find('td' , class_ = 'cell-icon').text.strip()
         power = tr.find_all_next('td', class_ = 'cell-num')[0].text.strip()
         accuracy = tr.find_all_next('td', class_ = 'cell-num')[1].text.strip()
-        effectiveness = effect_multiplier(move_type=typee,type1=,type2=)        #this parameter will contain the object of the pokemon the player uses
-        moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power,effectiveness=effectiveness)
+        moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power)
 
 def hp_bar(current_hp, max_hp, bar_length=20):
     current_hp = max(0, min(current_hp, max_hp))
@@ -208,14 +205,16 @@ def clean_up_crew():      #impletments all the functions that need to be used af
     evolving_checker(your_pokemon)
     pass
 
-def evolving_checker():
-    pass
+def evolving_checker(your_pokemon=your_pokemon):
+    for keys,values in your_pokemon.items():
+        if values.exp > values.exp_cap:
+            values.level += 1
 
 def pokemon_logger(level, pokemon,moveset = {}):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
     rqsts = requests.get(url)
     soup = BeautifulSoup(rqsts.content,'lxml')
-    stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
+    stats_table = soup.find('div',class_ = 'grid-col span-md-12 span-lg-8')
     numbers = stats_table.find_all('td', class_ = 'cell-num')
     base_hp = int(numbers[0].text)
     base_attack = int(numbers[3].text)
@@ -234,7 +233,7 @@ def pokemon_caught(level, pokemon):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
     rqsts = requests.get(url)
     soup = BeautifulSoup(rqsts.content,'lxml')
-    stats_table = soup.find('div' class_ = 'grid-col span-md-12 span-lg-8')
+    stats_table = soup.find('div' ,class_ = 'grid-col span-md-12 span-lg-8')
     numbers = stats_table.find_all('td', class_ = 'cell-num')
     base_hp = int(numbers[0].text)
     base_atk = int(numbers[3].text)
@@ -252,7 +251,8 @@ def pokemon_caught(level, pokemon):
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-    MyPokemon(level=level)
+    MyPokemon(level=level,base_hp=base_hp,type1=type1,type2=type2,spatk=base_spatk,spdef=base_spdef,speed=base_speed,atk=base_atk,defense=base_defense,iv=iv,exp_type=exp_type)
+
 
 def plot_pokemon_hp(your_pokemon=your_pokemon):
     names = [pokemon.name for pokemon in your_pokemon.values()]
@@ -289,6 +289,7 @@ def pokeball_prompt(opp_pokemon,pokeballs = pokeballs):
             pokeball_prompt()
     else:
         print(f'{opp_pokemon.name} got away!')
+        return 'quit'
 
 def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     opp_pokemon = pokemon_logger(opponent_pokemon=opponent_pokemon,level = level)
@@ -303,7 +304,8 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
         while True:
             status = pokemon_in_battle(pokemon= pokemon,opp_pokemon= opp_pokemon)
             if status == 'win':
-                pokeball_prompt(opp_pokemon=opp_pokemon)
+                if pokeball_prompt(opp_pokemon=opp_pokemon) == 'quit':
+                    return 'done'
                     
 
 def move_stat_finder(href):
@@ -343,6 +345,7 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
             moveset[name] = Moves(typex=typex,accuracy=accuracy,power=power)
         trainer_pokemon[pokemon_logger(pokemon=name,level = level,moveset = moveset)]
     for value in trainer_pokemon.values():
+        print(f'{trainer_name} sent out {value.name}!')
         pokemon_alive = your_pokemon_display(your_pokemon)
         prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
         pokemon = pokemon_alive[int(prompt)-1]  
@@ -352,8 +355,11 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
                 pokemon_alive = your_pokemon_display(your_pokemon)
                 prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
                 pokemon = pokemon_alive[int(prompt)-1]
+                continue
             elif status == 'win':
+                del trainer_pokemon[value.name]
                 break
+        continue
     return 'won'
 
 def pokemon_in_battle(pokemon, opp_pokemon, wild=True):
@@ -458,11 +464,14 @@ def route(location = route):
                 break
             elif new_prompt != 'yes':
                 continue
-            wild_battle(opponent_pokemon=selected_pokemon,level= level)
-        #trainer battle 
-        wait()
-        trainers = location.find_all('table', class_ = 'trainer')
-        if trainers is not None:
+            done = wild_battle(opponent_pokemon=selected_pokemon,level= level)
+            if done == 'done':
+                break
+        break
+    #trainer battle 
+    wait()
+    trainers = location.find_all('table', class_ = 'trainer')
+    if trainers is not None:
             for trainer in trainers:
                 trainer = trainers.find('td', class_ = 'trainer')
                 wait()
