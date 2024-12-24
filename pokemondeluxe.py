@@ -1,8 +1,19 @@
+#                                things left to do
+# checkpoints
+# clean_up_crew
+# exp ups depending on pokemon defeated
+# play the route again after losing
+# starter pokemon choice
+# bill's PC
+# sequences of routes
+# pokemart?
+
 from bs4 import BeautifulSoup
 import requests
 import random as rd
 import matplotlib.pyplot as plt                  # for showing hp of every pokemon after every battle
 import time
+import datetime                  #for day care center
 your_pokemon = {}
 global money
 money = 10000
@@ -10,7 +21,7 @@ global pokeballs
 pokeballs = 6
 
 class MyPokemon:
-    def __init__(self, base_hp: int,type1:str, spatk: int ,
+    def __init__(self, base_hp: int,type1:str,
                  exp_type:str,evolution:dict,name: str,iv:int,hp :int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
                  ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
 
@@ -46,6 +57,35 @@ class MyPokemon:
             self.level += 1
             self.exp = (self.exp_cap-self.exp)              # Reset experience after leveling up
 
+
+    def evolve(self):
+        url = 'https://pokemondb.net/evolution'
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'lxml')
+        evolution_blocks = soup.find_all('div', class_='infocard-list-evo')
+        for block in evolution_blocks:
+            pokemons = block.find_all('div', class_='infocard')
+            for i, pokemon in enumerate(pokemons):
+                name_tag = pokemon.find('a', class_='ent-name')
+                if name_tag and name_tag.text.strip() == self.name:
+                    evolution_arrow = block.find('span', class_='infocard-arrow')
+                    if evolution_arrow:
+                        level_tag = evolution_arrow.find('small')
+                        if level_tag and 'Level' in level_tag.text:
+                            required_level = int(level_tag.text.replace('(Level ', '').replace(')', ''))
+                            if self.level >= required_level and i + 1 < len(pokemons):
+                                next_pokemon = pokemons[i + 1].find('a', class_='ent-name').text.strip()
+                                print(f'Congratulations your {self.name} has evolved!')
+                                wait()
+                                del your_pokemon[self.name]
+                                self.name = next_pokemon
+                                print(f'It is now a {self.name}!')
+                                your_pokemon[self.name] = pokemon_caught(name = self.name,level = self.level)
+                                return
+                            return
+
+            
+
 class Moves:
     def __init__(self, typex, accuracy, power):
         self.typex = typex
@@ -58,8 +98,8 @@ class Moves:
         return damage
 
 class Pokemon(MyPokemon):
-    def __init__(self, base_hp, type1, spatk, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2=None, level=5, moveset={}, exp=0):
-        super().__init__(base_hp, type1, spatk, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2, level, moveset, exp) 
+    def __init__(self, base_hp, type1, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2=None, level=5, moveset={}, exp=0):
+        super().__init__(base_hp, type1, exp_type, evolution, name, iv, hp, evolution_level, base_speed, base_atk, base_defense, base_spatk, base_spdef, type2, level, moveset, exp)
         del self.evolution 
         del self.iv
         del self.evolution_level
@@ -208,7 +248,10 @@ def clean_up_crew():      #impletments all the functions that need to be used af
 def evolving_checker(your_pokemon=your_pokemon):
     for keys,values in your_pokemon.items():
         if values.exp > values.exp_cap:
-            values.level += 1
+            values.level_up()
+    for keys,values in your_pokemon.items():
+        if values.level >= values.evolution_level:
+            values.evolve()
 
 def pokemon_logger(level, pokemon,moveset = {}):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
@@ -251,7 +294,7 @@ def pokemon_caught(level, pokemon):
                 growth_rate = tr.find('td').text.strip()
                 break
     exp_type = growth_rate
-    MyPokemon(level=level,base_hp=base_hp,type1=type1,type2=type2,spatk=base_spatk,spdef=base_spdef,speed=base_speed,atk=base_atk,defense=base_defense,iv=iv,exp_type=exp_type)
+    return MyPokemon(level=level,base_hp=base_hp,type1=type1,type2=type2,spatk=base_spatk,spdef=base_spdef,speed=base_speed,atk=base_atk,defense=base_defense,iv=iv,exp_type=exp_type)
 
 
 def plot_pokemon_hp(your_pokemon=your_pokemon):
@@ -422,9 +465,9 @@ for element in select_element:
 select_element = region_soup.find('select', onchange = onchange_value)
 routes = select_element.find_all('option')
 for route in routes[1:]:         # need to get a sequence of routes which help the player to play smoothly
-    route()
+    route(route)
 
-def route(location = route):
+def route(location):
     print(location.text + ':')
     location_site = location.get('value')
     location_site = 'https://www.serebii.net' + location_site
@@ -434,7 +477,6 @@ def route(location = route):
         location_site.replace('/sinnoh','/sinnoh/4th')
     rqsts = requests.get(location_site)
     soup = BeautifulSoup(rqsts.content,'lxml')
-    # you can either get a trainer or find wild pokemon(use while loops)
     #wild pokemon
     while True:       # while loop keeps on asking if you want to battle against a pokemon and when youre done battling wild pokemon(another while loop should be in place for catching the pokemon) then starts a battle with a trainer's pokemon
         prompt = input('"Do you want to search for a Pokémon? The area around you seems full of potential hiding spots. (Yes/No)"')
@@ -478,11 +520,3 @@ def route(location = route):
                 trainer_battle(trainer=trainer)
                 if trainer_battle == 'won':
                     trainers.remove(trainer)
-
-        
-
-
-
-
-
-
