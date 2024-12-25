@@ -1,15 +1,15 @@
-#                                things left to do
+#                                                                things left to do
 # checkpoints
-# clean_up_crew
+# clean_up_crew()
 # exp ups depending on pokemon defeated
 # play the route again after losing
-# starter pokemon choice
 # bill's PC
 # sequences of routes
 # pokemart?
 
 from bs4 import BeautifulSoup
 import requests
+import pandas as pd
 import random as rd
 import matplotlib.pyplot as plt                  # for showing hp of every pokemon after every battle
 import time
@@ -22,7 +22,7 @@ pokeballs = 6
 
 class MyPokemon:
     def __init__(self, base_hp: int,type1:str,
-                 exp_type:str,evolution:dict,name: str,iv:int,hp :int,evolution_level:int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
+                 exp_type:str,name: str,iv:int,hp :int,base_speed : int,base_atk:int,base_defense:int,base_spatk:int
                  ,base_spdef:int,type2 = None, level = 5,moveset={},exp = 0):
 
         self.base_hp = base_hp
@@ -32,8 +32,6 @@ class MyPokemon:
         self.type2 = type2
         self.moveset = moveset
         self.level = level
-        self.evolution = evolution
-        self.evolution_level = evolution_level
         self.base_atk = base_atk
         self.attack = attack_finder(base = base_atk,level = level,iv = iv)
         self.base_defense = base_defense
@@ -94,7 +92,7 @@ class Moves:
 
     def damage(self, pokemon):
         effectiveness = effect_multiplier(move_type=self.typex, type1=pokemon.type1, type2=pokemon.type2)
-        damage = self.power * effectiveness
+        damage = (((2 * self.level / 5 + 2) * self.power * self.attack / pokemon.defense) // 50) + 2
         return damage
 
 class Pokemon(MyPokemon):
@@ -107,7 +105,6 @@ class Pokemon(MyPokemon):
         del self.exp_cap
         del self.exp_type
         del self.weaknesses
-    
 
 def exp_cap_changer(level,typee):
     if typee == 'Erratic':
@@ -212,6 +209,7 @@ def default_moves_logger(soup,moveset):
         power = tr.find_all_next('td', class_ = 'cell-num')[0].text.strip()
         accuracy = tr.find_all_next('td', class_ = 'cell-num')[1].text.strip()
         moveset[name] = Moves(typex=typee,accuracy = accuracy,power=power)
+    return moveset
 
 def hp_bar(current_hp, max_hp, bar_length=20):
     current_hp = max(0, min(current_hp, max_hp))
@@ -250,8 +248,7 @@ def evolving_checker(your_pokemon=your_pokemon):
         if values.exp > values.exp_cap:
             values.level_up()
     for keys,values in your_pokemon.items():
-        if values.level >= values.evolution_level:
-            values.evolve()
+        values.evolve()
 
 def pokemon_logger(level, pokemon,moveset = {}):
     url = 'https://pokemondb.net/pokedex/' + pokemon.lower()
@@ -340,7 +337,8 @@ def wild_battle(level,opponent_pokemon,your_pokemon = your_pokemon):
     pokemon_alive = your_pokemon_display(your_pokemon)
     prompt = input('Which Pokemon would you like to pick? (Type the number of the pokemon/ type p for pokeball) ')
     if prompt.lower() == 'p':
-        pass
+        if pokeball_prompt(opp_pokemon=opp_pokemon) == 'quit':
+            return 'done'
     else:
         pokemon = pokemon_alive[int(prompt)-1]                              # the pokemon you selected
         print(f'Go out {pokemon.name}!')
@@ -396,6 +394,8 @@ def trainer_battle(trainer,your_pokemon=your_pokemon):
             status = pokemon_in_battle(pokemon=pokemon,opp_pokemon=value,wild=False)
             if status == 'fainted':
                 pokemon_alive = your_pokemon_display(your_pokemon)
+                if len(pokemon_alive) < 1:
+                    return 'loss'
                 prompt = int(input('Which Pokemon would you like to pick? (Type the number of the pokemon)'))
                 pokemon = pokemon_alive[int(prompt)-1]
                 continue
@@ -453,6 +453,24 @@ def wait():
 games = {'kanto':'firered-leafgreen','unova':'black-white','sinnoh':'platinum','hoenn':'ruby-sapphire-emerald','alola':'sun-moon','kalos':'x-y','johto':'heartgold-soulsilver','galar':'sword-shield'}
 game_choice = input('Which game would you like to play? (kanto,johto,hoenn,sinnoh,unova,kalos,alola,galar) ')
 game_choice = game_choice.title()
+
+#starter pokemon
+data = {'Kanto': ['Bulbasaur', 'Charmander', 'Squirtle'],'Johto': ['Chikorita', 'Cyndaquil', 'Totodile'],'Hoenn': ['Treecko', 'Torchic', 'Mudkip'],'Sinnoh': ['Turtwig', 'Chimchar', 'Piplup'],'Unova': ['Snivy', 'Tepig', 'Oshawott'],'Kalos': ['Chespin', 'Fennekin', 'Froakie'],'Alola': ['Rowlet', 'Litten', 'Popplio'],'Galar': ['Grookey', 'Scorbunny', 'Sobble'],'Paldea': ['Sprigatito', 'Fuecoco', 'Quaxly']}
+for pokemon in data[game_choice]:
+    print(f'{pokemon}')
+    url = f'https://www.pokemon.com/us/pokedex/{pokemon}'
+    rqsts = requests.get(url)
+    soup = BeautifulSoup(rqsts.content,'lxml')
+    pokedex_entry = soup.find('p', class_ = 'version-x').text.strip()
+    print('.')
+    print(pokedex_entry)
+    wait()
+prompt = input(f'Which Pokemon would you like to pick as a starter pokemon? ({','.join(data[game_choice])})')
+pokemon_caught(prompt)
+
+
+
+
 
 location_site = 'https://www.serebii.net/pokearth/'
 reachingout = requests.get(location_site)
@@ -517,6 +535,9 @@ def route(location):
             for trainer in trainers:
                 trainer = trainers.find('td', class_ = 'trainer')
                 wait()
-                trainer_battle(trainer=trainer)
+                trainer_battle = trainer_battle(trainer=trainer)
                 if trainer_battle == 'won':
                     trainers.remove(trainer)
+                elif trainer_battle == 'loss':
+                    pass
+                    # go back to the previous city visited and use the pokecenter() function and come back to this route
